@@ -59,9 +59,50 @@ class InvalidProcessState(Error):
 class ExecutionError(Error):
     """Raised when command failed to execute."""
 
-    def __init__(self, status = 127):
+    # TODO: status = 127
+    def __init__(self, status, stdout, stderr):
         super(ExecutionError, self).__init__("Command execution failed")
-        self.status = status
+        self.__status = status
+        self.__stdout = stdout
+        self.__stderr = stderr
+
+
+    def raw_stderr(self):
+        """Returns the process' raw stderr."""
+
+        return self.__stderr
+
+
+    def raw_stdout(self):
+        """Returns the process' raw stdout."""
+
+        return self.__stdout
+
+
+    def status(self):
+        """Returns the process' exit status."""
+
+        return self.__status
+
+
+    def stderr(self):
+        """Returns the process' stderr."""
+
+        return to_unicode(self.__stderr)
+
+
+    def stdout(self):
+        """Returns the process' stdout."""
+
+        return to_unicode(self.__stdout)
+
+
+# TODO
+def to_unicode(string):
+    return string.decode("utf-8")
+
+def from_unicode(string):
+    return string.encode("utf-8")
 
 
 PROCESS_STATE_PENDING = "pending"
@@ -85,8 +126,20 @@ class Command:
         # TODO kwargs
         self.__command += args
 
+
         # Success status codes for this command
         self.__ok_statuses = [ 0 ]
+
+
+        # Command's stdout
+        self.__stdout = r""
+
+        # Command's stderr
+        self.__stdout = r""
+
+        # Command's termination status
+        self.__status = None
+
 
         for option in kwargs.keys():
             if option.startswith("_"):
@@ -119,15 +172,19 @@ class Command:
     # TODO
     def execute(self):
         try:
-            process = subprocess.Popen([ unicode(arg) for arg in self.__command ])
+            process = subprocess.Popen([ unicode(arg) for arg in self.__command ],
+                stdout = subprocess.PIPE, stderr = subprocess.PIPE)
             stdout, stderr = process.communicate('')
             self.__status = process.returncode
             self.__state = PROCESS_STATE_TERMINATED
         except Exception:
             raise Error("ggg")
 
+        self.__stdout = stdout
+        self.__stderr = stderr
+
         if self.__status not in self.__ok_statuses:
-            raise ExecutionError(self.__status)
+            raise ExecutionError(self.__status, self.__stdout, self.__stderr)
 
     # TODO
     def __or__(self, command):
@@ -137,11 +194,35 @@ class Command:
         return command
 
 
+    def raw_stderr(self):
+        """Returns the process' raw stderr."""
+
+        return self.__stderr
+
+
+    def raw_stdout(self):
+        """Returns the process' raw stdout."""
+
+        return self.__stdout
+
+
     def status(self):
-        """Returns the process exit status."""
+        """Returns the process' exit status."""
 
         self.__ensure_terminated()
         return self.__status
+
+
+    def stderr(self):
+        """Returns the process' stderr."""
+
+        return to_unicode(self.__stderr)
+
+
+    def stdout(self):
+        """Returns the process' stdout."""
+
+        return to_unicode(self.__stdout)
 
 
     def __ensure_terminated(self):

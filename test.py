@@ -5,7 +5,9 @@
 from __future__ import unicode_literals
 
 import pytest
+
 import psh
+from psh import sh
 
 try:
     import pycl.log
@@ -18,22 +20,22 @@ else:
 def test_zero_exit_status():
     """Tests zero exit status."""
 
-    assert psh.true().status() == 0
+    assert sh.true().status() == 0
 
 
 def test_nonzero_exit_status():
     """Tests nonzero exit status."""
 
     assert pytest.raises(psh.ExecutionError,
-        lambda: psh.false()).value.status() == 1
+        lambda: sh.false()).value.status() == 1
 
 
 def test_ok_statuses():
     """Tests _ok_statuses option."""
 
-    assert psh.false(_ok_statuses = [ 0, 1 ] ).status() == 1
+    assert sh.false(_ok_statuses = [ 0, 1 ] ).status() == 1
     assert pytest.raises(psh.ExecutionError,
-        lambda: psh.true(_ok_statuses = [])).value.status() == 0
+        lambda: sh.true(_ok_statuses = [])).value.status() == 0
 
 
 def test_output():
@@ -44,11 +46,11 @@ def test_output():
 
     command = "echo тест1; echo тест2 >&2; echo тест3; echo тест4 >&2;"
 
-    process = psh.sh("-c", command)
+    process = sh.sh("-c", command)
     _check_output(process, valid_stdout, valid_stderr)
 
     error = pytest.raises(psh.ExecutionError,
-        lambda: psh.sh("-c", command + " exit 1")).value
+        lambda: sh.sh("-c", command + " exit 1")).value
     _check_output(error, valid_stdout, valid_stderr)
 
 

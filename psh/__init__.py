@@ -16,7 +16,7 @@ class Program:
     """Represents a program."""
 
     def __init__(self, program):
-        # Program name
+        # Program name or full path
         self.__program = program
 
 

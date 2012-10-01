@@ -17,6 +17,46 @@ else:
     pycl.log.setup(debug_mode = True)
 
 
+
+def test_command_arguments():
+    """Tests command argument parsing."""
+    # TODO: defer
+
+    process = sh.test(_ok_statuses = [ 0, 1, 2 ])
+    assert process.command() == [ "test" ]
+    assert process.command_string() == "test"
+
+    process = sh.test(
+        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', #b"тест", b"тест тест", # TODO when got rid of subprocess
+        "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
+        3, 2 ** 128, 2.0,
+        _ok_statuses = [ 0, 1, 2 ]
+    )
+    assert process.command() == [ "test",
+        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg',
+        "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
+        "3", "340282366920938463463374607431768211456", "2.0"
+    ]
+    assert process.command_string() == ("test "
+        r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' "quote'arg" 'quote"arg' """
+        r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' 'quote\'arg' 'quote"arg' тест 'тест тест' """
+        "3 340282366920938463463374607431768211456 2.0"
+    )
+
+    process = sh.test("space arg", s = "short_arg", _ok_statuses = [ 0, 1, 2 ])
+    assert process.command() == [ "test", "-s", "short_arg", "space arg" ]
+    assert process.command_string() == "test -s short_arg 'space arg'"
+
+    process = sh.test("arg", long_long_arg = "long arg", _ok_statuses = [ 0, 1, 2 ])
+    assert process.command() == [ "test", "--long-long-arg", "long arg", "arg" ]
+    assert process.command_string() == "test --long-long-arg 'long arg' arg"
+
+    process = sh.test("arg", none_arg = None, _ok_statuses = [ 0, 1, 2 ])
+    assert process.command() == [ "test", "--none-arg", "arg" ]
+    assert process.command_string() == "test --none-arg arg"
+
+
+
 def test_zero_exit_status():
     """Tests zero exit status."""
 
@@ -36,6 +76,7 @@ def test_ok_statuses():
     assert sh.false(_ok_statuses = [ 0, 1 ] ).status() == 1
     assert pytest.raises(psh.ExecutionError,
         lambda: sh.true(_ok_statuses = [])).value.status() == 0
+
 
 
 def test_output():

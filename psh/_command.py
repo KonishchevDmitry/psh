@@ -13,25 +13,26 @@ from psh.exceptions import InvalidProcessState
 
 LOG = logging.getLogger(__name__)
 
+
 _PROCESS_STATE_PENDING = "pending"
 """Pending process state."""
 
 _PROCESS_STATE_TERMINATED = "terminated"
 """Terminated process state."""
 
+
 class Command:
     """Represents an executing command."""
 
-    # TODO
     def __init__(self, program, *args, **kwargs):
         # Current state of the process
         self.__state = _PROCESS_STATE_PENDING
 
+        # Program name or full path
         self.__program = program
 
-        self.__command = [ program ]
-        # TODO kwargs
-        self.__command += args
+        # Command's sys.argv
+        self.__command = []
 
 
         # Success status codes for this command
@@ -48,44 +49,63 @@ class Command:
         self.__status = None
 
 
-        for option in kwargs.keys():
-            if option.startswith("_"):
-                value = kwargs[option]
-
-                if option == "_ok_statuses":
-                    self.__ok_statuses = [ int(status) for status in value ]
-                else:
-                    raise Error("Invalid option: {0}", option)
-
-                del kwargs[option]
+        self.__parse_args(args, kwargs)
 
         LOG.debug("Executing %s", self.command_string())
         self.execute()
 
-    # TODO
+
+    def command(self):
+        """Returns command arguments as it will be executed."""
+
+        return self.__command[:]
+
+
     def command_string(self):
-        """Returns command string."""
+        """Returns command string as it will be executed."""
 
         command = ""
+
         for arg in self.__command:
-            arg = unicode(arg)
-            if " " in arg:
-                arg = "'" + arg + "'"
             if command:
                 command += " "
-            command += arg
+
+            if type(arg) == str:
+                value = repr(arg)
+                for c in b""" '"\\\r\n\t""":
+                    if c in arg:
+                        break
+                else:
+                    value = value.strip("'")
+                command += value
+            else:
+                for c in b""" '"\\\r\n\t""":
+                    if c in arg:
+                        for replacement in (
+                            ( b"\\", br"\\" ),
+                            ( b"'",  br"\'" ),
+                            ( b"\r", br"\r" ),
+                            ( b"\n", br"\n" ),
+                            ( b"\t", br"\t" ),
+                        ):
+                            arg = arg.replace(*replacement)
+
+                        arg = "'" + arg + "'"
+                        break
+                command += arg
+
         return command
 
     # TODO
     def execute(self):
-        try:
-            process = subprocess.Popen([ unicode(arg) for arg in self.__command ],
-                stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-            stdout, stderr = process.communicate('')
-            self.__status = process.returncode
-            self.__state = _PROCESS_STATE_TERMINATED
-        except Exception:
-            raise Error("ggg")
+        #try:
+        process = subprocess.Popen([ unicode(arg) for arg in self.__command ],
+            stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        stdout, stderr = process.communicate('')
+        self.__status = process.returncode
+        self.__state = _PROCESS_STATE_TERMINATED
+        #except Exception as e:
+        #    raise Error(str(e))
 
         self.__stdout = stdout
         self.__stderr = stderr
@@ -137,3 +157,37 @@ class Command:
 
         if self.__state != _PROCESS_STATE_TERMINATED:
             raise InvalidProcessState("Process is not terminated")
+
+
+    def __parse_args(self, args, kwargs):
+        """Parses command arguments and options."""
+
+        self.__command.append(self.__program)
+
+        for option, value in kwargs.iteritems():
+            if option.startswith("_"):
+                if option == "_ok_statuses":
+                    self.__ok_statuses = [ int(status) for status in value ]
+                else:
+                    raise Error("Invalid option: {0}", option)
+            elif len(option) == 1:
+                self.__command.append("-" + option)
+                if value is not None:
+                    self.__command.append(_get_arg_value(value))
+            else:
+                self.__command.append("--" + option.replace("_", "-"))
+                if value is not None:
+                    self.__command.append(_get_arg_value(value))
+
+        self.__command += [ _get_arg_value(arg) for arg in args ]
+
+
+def _get_arg_value(value):
+    """Returns an argument string value."""
+
+    if type(value) in ( str, unicode ):
+        return value
+    elif type(value) in ( int, long, float ):
+        return unicode(value)
+    else:
+        raise Error("Invalid argument: command arguments must be basic types only")

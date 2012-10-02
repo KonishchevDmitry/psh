@@ -17,7 +17,6 @@ else:
     pycl.log.setup(debug_mode = True)
 
 
-
 def test_command_arguments():
     """Tests command argument parsing."""
     # TODO: defer

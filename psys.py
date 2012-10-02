@@ -2,18 +2,8 @@
 
 from __future__ import unicode_literals
 
-# TODO
-#def syscall_wrapper(func, *args, **kwargs):
-#    """Calls func() ignoring EINTR error."""
-#
-#    while True:
-#        try:
-#            return func(*args, **kwargs)
-#        except EnvironmentError as e:
-#            if e.errno == errno.EINTR:
-#                pass
-#            else:
-#                raise
+import errno
+import os
 
 
 def b(string):
@@ -26,6 +16,26 @@ def b(string):
         return string.encode("utf-8")
     else:
         return string
+
+
+def e(error):
+    """Returns an exception error string."""
+
+    return os.strerror(error.errno) if isinstance(error, EnvironmentError) else unicode(error)
+
+
+def eintr_retry(func):
+    """Wraps the function to retry calls ended up with EINTR."""
+
+    def wrapper(*args, **kwargs):
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except EnvironmentError as e:
+                if e.errno != errno.EINTR:
+                    raise e
+
+    return wrapper
 
 
 def u(string):

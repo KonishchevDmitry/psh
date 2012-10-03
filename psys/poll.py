@@ -41,6 +41,12 @@ class _Poll(object):
         raise Exception("Not implemented")
 
 
+    def unregister(self, fd):
+        """Remove a file descriptor being tracked by a polling object."""
+
+        raise Exception("Not implemented")
+
+
 
 if hasattr(select, "epoll"):
     class Poll(_Poll):
@@ -111,15 +117,21 @@ if hasattr(select, "epoll"):
             if self.__epoll is None:
                 raise Exception("The poll object is closed")
 
-            flags = 0
+            epoll_flags = 0
 
             if flags & self.POLLIN:
-                flags |= select.EPOLLIN
+                epoll_flags |= select.EPOLLIN
 
             if flags & self.POLLOUT:
-                flags |= select.EPOLLOUT
+                epoll_flags |= select.EPOLLOUT
 
-            self.__epoll.register(fd, flags)
+            self.__epoll.register(fd, epoll_flags)
+
+
+        def unregister(self, fd):
+            """Remove a file descriptor being tracked by a polling object."""
+
+            self.__epoll.unregister(fd)
 else:
     class Poll(_Poll):
         """select implementation."""
@@ -176,3 +188,17 @@ else:
 
             if flags & self.POLLOUT and fd not in self.__wlist:
                 self.__wlist.append(fd)
+
+
+        def unregister(self, fd):
+            """Remove a file descriptor being tracked by a polling object."""
+
+            try:
+                self.__rlist.remove(fd)
+            except ValueError:
+                pass
+
+            try:
+                self.__wlist.remove(fd)
+            except ValueError:
+                pass

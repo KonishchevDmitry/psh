@@ -4,6 +4,13 @@
 
 from __future__ import unicode_literals
 
+import os
+import platform
+import re
+import subprocess
+import tempfile
+import threading
+
 import pytest
 
 import psh
@@ -17,7 +24,49 @@ else:
     pycl.log.setup(debug_mode = True)
 
 
-def test_command_arguments():
+# TODO
+def pytest_funcarg__test(request):
+    """Test wrapper that checks the module for leaks."""
+
+    def opened_fds():
+        if platform.system() == "Darwin":
+            fd_path = "/dev/fd"
+        else:
+            fd_path = "/proc/self/fd"
+
+        return set( int(fd) for fd in os.listdir(fd_path) )
+
+    def running_threads():
+        return set( thread.ident for thread in threading.enumerate() )
+
+    def process_childs():
+        process = subprocess.Popen(
+            [ "ps", "-A", "-o", "ppid=,pid=,command=" ],
+            stdout = subprocess.PIPE)
+
+        stdout, stderr = process.communicate()
+        assert not process.returncode
+        assert stdout
+
+        return "\n".join(
+            line for line in stdout.split("\n")
+                if re.search(r"^\s*{pid}\s+(?!{ps_pid})".format(
+                    pid = os.getpid(), ps_pid = process.pid), line))
+
+    fds = opened_fds()
+    threads = running_threads()
+    childs = process_childs()
+
+    def check():
+        assert opened_fds() == fds
+        assert running_threads() == threads
+        assert process_childs() == childs
+
+    request.addfinalizer(check)
+
+
+
+def test_command_arguments(test):
     """Tests command argument parsing."""
     # TODO: defer
 
@@ -56,20 +105,28 @@ def test_command_arguments():
 
 
 
-def test_zero_exit_status():
+def test_zero_exit_status(test):
     """Tests zero exit status."""
 
     assert sh.true().status() == 0
 
 
-def test_nonzero_exit_status():
+def test_nonzero_exit_status(test):
     """Tests nonzero exit status."""
 
     assert pytest.raises(psh.ExecutionError,
         lambda: sh.false()).value.status() == 1
 
 
-def test_ok_statuses():
+def test_nonexisting_command(test):
+    """Tests executing nonexistent."""
+
+    # TODO: more long and complex
+    assert pytest.raises(psh.ExecutionError,
+        lambda: sh.nonexistent()).value.status() == 127
+
+
+def test_ok_statuses(test):
     """Tests _ok_statuses option."""
 
     assert sh.false(_ok_statuses = [ 0, 1 ] ).status() == 1
@@ -78,13 +135,13 @@ def test_ok_statuses():
 
 
 
-def test_output():
+def test_output(test):
     """Tests process output handling."""
 
     valid_stdout = "тест1\nтест3\n"
     valid_stderr = "тест2\nтест4\n"
 
-    command = "echo тест1; echo тест2 >&2; echo тест3; echo тест4 >&2;"
+    command = "echo тест1; echo тест2 >&2; sleep 1; echo тест3; echo тест4 >&2; "
 
     process = sh.sh("-c", command)
     _check_output(process, valid_stdout, valid_stderr)
@@ -92,6 +149,37 @@ def test_output():
     error = pytest.raises(psh.ExecutionError,
         lambda: sh.sh("-c", command + " exit 1")).value
     _check_output(error, valid_stdout, valid_stderr)
+
+
+def test_large_output(test):
+    """Tests large amount of output (more than pipe buffer size)."""
+
+    stdout_tempfile = None
+    stderr_tempfile = None
+
+    stdout = open("/dev/urandom").read(1024 * 1024)
+    stderr = open("/dev/urandom").read(1024 * 1024 + 1)
+
+    try:
+        stdout_tempfile = tempfile.NamedTemporaryFile()
+        stdout_tempfile.write(stdout)
+        stdout_tempfile.flush()
+
+        stderr_tempfile = tempfile.NamedTemporaryFile()
+        stderr_tempfile.write(stderr)
+        stderr_tempfile.flush()
+
+        process = sh.sh("-c", "cat {stdout} & pid=$!; cat {stderr} >&2; wait $pid;".format(
+            stdout = stdout_tempfile.name, stderr = stderr_tempfile.name))
+
+        assert process.raw_stdout() == stdout
+        assert process.raw_stderr() == stderr
+    finally:
+        if stdout_tempfile is not None:
+            stdout_tempfile.close()
+
+        if stderr_tempfile is not None:
+            stderr_tempfile.close()
 
 
 def _check_output(obj, valid_stdout, valid_stderr):

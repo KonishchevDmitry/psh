@@ -24,7 +24,6 @@ else:
     pycl.log.setup(debug_mode = True)
 
 
-# TODO
 def pytest_funcarg__test(request):
     """Test wrapper that checks the module for leaks."""
 

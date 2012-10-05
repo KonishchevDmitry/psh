@@ -104,8 +104,21 @@ def test_command_arguments(test):
     assert process.command_string() == "test --none-arg arg"
 
 
+def test_invalid_command_arguments(test):
+    """Tests invalid command arguments."""
 
-def test_repeated_execution():
+    class Class:
+        pass
+
+    with pytest.raises(psh.InvalidArgument):
+        sh.test(Class())
+
+    with pytest.raises(psh.InvalidArgument):
+        sh.test(_invalid = None)
+
+
+
+def test_repeated_execution(test):
     """Tests repeated execution."""
 
     process = sh.true().execute()
@@ -269,6 +282,36 @@ def _check_output(obj, valid_stdout, valid_stderr):
 
 
 
+def test_string_input(test):
+    """Tests process input from string."""
+
+    assert sh.grep("тест", _stdin = "aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
+    assert sh.grep("тест", _stdin = b"aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
+
+
+def test_iterator_input(test):
+    """Tests process input from string."""
+
+    stdout = "\n".join(str(i) for i in xrange(0, 10))
+
+    def func():
+        for i in xrange(0, 10):
+            yield "\n" + str(i) if i else str(i)
+
+    assert sh.cat(_stdin = func()).execute().stdout() == stdout
+
+
+def test_invalid_input(test):
+    """Tests invalid input."""
+
+    with pytest.raises(psh.InvalidArgument):
+        sh.grep(_stdin = 3)
+
+    with pytest.raises(psh.InvalidArgument):
+        sh.grep("1", _stdin = iter([ 1 ])).execute()
+
+
+
 def test_pipes(test):
     """Tests process pipes."""
 
@@ -303,6 +346,10 @@ def test_pipe_errors(test):
 
 def test_piping_errors(test):
     """Tests invalid process piping."""
+
+    process = sh.cat()
+    with pytest.raises(psh.InvalidOperation):
+        process | "string"
 
     process = sh.cat()
     process | sh.grep()

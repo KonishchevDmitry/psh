@@ -53,6 +53,13 @@ class ExecutionError(Error):
         return psys.u(self.__stdout)
 
 
+class InvalidArgument(Error):
+    """Raised on attempt to start a process with invalid arguments."""
+
+    def __init__(self, *args, **kwargs):
+        super(InvalidArgument, self).__init__(*args, **kwargs)
+
+
 class InvalidOperation(Error):
     """Raised on attempt to process an invalid operation on a process."""
 

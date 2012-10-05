@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 import cStringIO
+import collections
 import errno
 import fcntl
 import logging
@@ -18,6 +19,7 @@ from psys import eintr_retry
 
 from psh.exceptions import Error, LogicalError
 from psh.exceptions import ExecutionError
+from psh.exceptions import InvalidArgument
 from psh.exceptions import InvalidOperation
 from psh.exceptions import InvalidProcessState
 
@@ -58,8 +60,12 @@ class Command:
         self.__command = []
 
 
-        # The process' custom stdin source (another process)
+        # The process' custom stdin source (another process, string or
+        # generator)
         self.__stdin_source = None
+
+        # stdin generator
+        self.__stdin_generator = None
 
         # The process' custom stdout target (another process)
         self.__stdout_target = None
@@ -92,6 +98,9 @@ class Command:
 
         # Command's termination status
         self.__status = None
+
+        # Execution error if occurred
+        self.__error = None
 
 
         # Parse the command arguments
@@ -236,12 +245,16 @@ class Command:
 
         self.__join_threads()
 
-        if self.__stdin_source is not None:
+        if self.__piped_from_process():
             self.__stdin_source.wait(
                 check_status = check_status, kill = kill)
 
-        if check_status and self.__status not in self.__ok_statuses:
-            raise ExecutionError(self.__status, self.raw_stdout(), self.raw_stderr())
+        if check_status:
+            if self.__error is not None:
+                raise self.__error
+
+            if self.__status not in self.__ok_statuses:
+                raise ExecutionError(self.__status, self.raw_stdout(), self.raw_stderr())
 
         return self.__status
 
@@ -267,10 +280,10 @@ class Command:
             self.__join_threads()
 
             if (
-                self.__stdin_source is not None and
+                self.__piped_from_process() and
                 self.__stdin_source._state() >= _PROCESS_STATE_RUNNING
             ):
-                self.__stderr.wait(kill = signal.SIGTERM)
+                self.__stdin_source.wait(kill = signal.SIGTERM)
 
             raise e
 
@@ -386,7 +399,21 @@ class Command:
                 # stdin
                 if pipe.source == psys.STDIN_FILENO:
                     if stdin is None:
-                        stdin = self.__on_input()
+                        try:
+                            stdin = next(self.__stdin_generator)
+
+                            try:
+                                if isinstance(stdin, unicode):
+                                    stdin = psys.b(stdin)
+                                elif not isinstance(stdin, str):
+                                    raise ValueError("must be a string")
+                            except Exception as e:
+                                raise InvalidArgument("Invalid stdin data: {0}", e)
+                        except StopIteration:
+                            pass
+                        except Exception as e:
+                            self.__error = e
+                            stdin = None
 
                     if stdin is None:
                         poll.unregister(fd)
@@ -487,14 +514,26 @@ class Command:
             self.__pipes.append(_Pipe(fd, output = bool(fd),
                 pipe = stdout if fd == psys.STDOUT_FILENO else None))
 
-        # Execute all processes in the pipe
-        if self.__stdin_source is not None:
+        # Configure stdin -->
+        if self.__stdin_source is None:
+            self.__stdin_generator = iter([])
+        elif self.__piped_from_process():
+            # Execute all processes in the pipe
+
             for pipe in self.__pipes:
                 if pipe.source == psys.STDIN_FILENO:
-                    self.__stdin_source._execute(stdout = pipe, check_pipes = False)
+                    self.__stdin_source._execute(
+                        stdout = pipe, check_pipes = False)
                     break
             else:
                 raise LogicalError()
+        elif isinstance(self.__stdin_source, basestring):
+            self.__stdin_generator = iter([ self.__stdin_source ])
+        elif isinstance(self.__stdin_source, collections.Iterator):
+            self.__stdin_generator = self.__stdin_source
+        else:
+            raise LogicalError()
+        # Configure stdin <--
 
         # Fork the process -->
         fork_lock = threading.Lock()
@@ -564,13 +603,6 @@ class Command:
         return True
 
 
-    def __on_input(self):
-        """Called when we are ready to send stdin data to the process."""
-
-        # TODO: convert unicode
-        return None
-
-
     def __on_output(self, fd, data):
         """Called when we got stdout/stderr data from the process."""
 
@@ -579,6 +611,9 @@ class Command:
 
     def __or__(self, command):
         """Shell-style pipelines."""
+
+        if not isinstance(command, Command):
+            raise InvalidOperation("Process may be piped only with another process")
 
         with self.__lock:
             if self.__state != _PROCESS_STATE_PENDING:
@@ -602,8 +637,13 @@ class Command:
             if option.startswith("_"):
                 if option == "_ok_statuses":
                     self.__ok_statuses = [ int(status) for status in value ]
+                elif option == "_stdin":
+                    if not isinstance(value, ( str, unicode, collections.Iterator )):
+                        raise InvalidArgument("Invalid stdin source")
+
+                    self.__stdin_source = value
                 else:
-                    raise Error("Invalid option: {0}", option)
+                    raise InvalidArgument("Invalid option: {0}", option)
             elif len(option) == 1:
                 self.__command.append("-" + option)
                 if value is not None:
@@ -614,6 +654,12 @@ class Command:
                     self.__command.append(_get_arg_value(value))
 
         self.__command += [ _get_arg_value(arg) for arg in args ]
+
+
+    def __piped_from_process(self):
+        """Returns True if this process is piped from another process."""
+
+        return self.__stdin_source is not None and isinstance(self.__stdin_source, Command)
 
 
     def __wait_pid_thread(self, fork_lock, termination_fd):
@@ -716,4 +762,4 @@ def _get_arg_value(value):
     elif type(value) in ( int, long, float ):
         return unicode(value)
     else:
-        raise Error("Invalid argument: command arguments must be basic types only")
+        raise InvalidArgument("Invalid argument: command arguments must be basic types only")

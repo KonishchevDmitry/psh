@@ -7,9 +7,11 @@ from __future__ import unicode_literals
 import os
 import platform
 import re
+import signal
 import subprocess
 import tempfile
 import threading
+import time
 
 import pytest
 
@@ -67,25 +69,24 @@ def pytest_funcarg__test(request):
 
 def test_command_arguments(test):
     """Tests command argument parsing."""
-    # TODO: defer
 
     process = sh.test(_ok_statuses = [ 0, 1, 2 ])
     assert process.command() == [ "test" ]
     assert process.command_string() == "test"
 
     process = sh.test(
-        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', #b"тест", b"тест тест", # TODO when got rid of subprocess
+        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', b"тест", b"тест тест",
         "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
         3, 2 ** 128, 2.0,
         _ok_statuses = [ 0, 1, 2 ]
     )
     assert process.command() == [ "test",
-        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg',
+        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', b"тест", b"тест тест",
         "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
         "3", "340282366920938463463374607431768211456", "2.0"
     ]
     assert process.command_string() == ("test "
-        r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' "quote'arg" 'quote"arg' """
+        r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' "quote'arg" 'quote"arg' \xd1\x82\xd0\xb5\xd1\x81\xd1\x82 '\xd1\x82\xd0\xb5\xd1\x81\xd1\x82 \xd1\x82\xd0\xb5\xd1\x81\xd1\x82' """
         r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' 'quote\'arg' 'quote"arg' тест 'тест тест' """
         "3 340282366920938463463374607431768211456 2.0"
     )
@@ -104,17 +105,87 @@ def test_command_arguments(test):
 
 
 
+def test_repeated_execution():
+    """Tests repeated execution."""
+
+    process = sh.true().execute()
+    with pytest.raises(psh.InvalidOperation):
+        process.execute()
+
+
+
+def test_pid(test):
+    """Tests pid()."""
+
+    process = sh.sh("-c", "echo $$")
+
+    with pytest.raises(psh.InvalidProcessState):
+        process.pid()
+
+    assert process.execute().stdout().strip() == unicode(process.pid())
+
+
+
+def test_kill(test):
+    """Tests kill()."""
+
+    start_time = time.time()
+    process = sh.sleep("3").execute(wait = False)
+    process.kill()
+    assert process.wait() == 143
+    assert time.time() < start_time + 1
+
+
+
+def test_wait(test):
+    """Tests wait()."""
+
+    start_time = time.time()
+    process = sh.sleep("3").execute(wait = False)
+    assert time.time() < start_time + 1
+    assert process.wait() == 0
+    assert time.time() >= start_time + 3
+
+
+def test_wait_status(test):
+    """Tests wait() return value."""
+
+    assert sh.true().execute(wait = False).wait() == 0
+    assert sh.true().execute(wait = False).wait(check_status = True) == 0
+
+    assert sh.false().execute(wait = False).wait() == 1
+    assert pytest.raises(psh.ExecutionError,
+        lambda: sh.false().execute(wait = False).wait(check_status = True)).value.status() == 1
+
+
+def test_wait_with_kill(test):
+    """Tests wait(kill = ...)."""
+
+    start_time = time.time()
+    process = sh.sleep("3").execute(wait = False)
+    assert process.wait(kill = signal.SIGTERM) == 143
+    assert time.time() < start_time + 1
+
+
+def test_invalid_wait(test):
+    """Tests wait() on a pending process."""
+
+    with pytest.raises(psh.InvalidProcessState):
+        sh.true().wait()
+
+
+
 def test_zero_exit_status(test):
     """Tests zero exit status."""
 
-    assert sh.true().status() == 0
+    assert sh.true().execute().status() == 0
 
 
 def test_nonzero_exit_status(test):
     """Tests nonzero exit status."""
 
     assert pytest.raises(psh.ExecutionError,
-        lambda: sh.false()).value.status() == 1
+        lambda: sh.false().execute()).value.status() == 1
 
 
 def test_nonexisting_command(test):
@@ -122,15 +193,15 @@ def test_nonexisting_command(test):
 
     # TODO: more long and complex
     assert pytest.raises(psh.ExecutionError,
-        lambda: sh.nonexistent()).value.status() == 127
+        lambda: sh.nonexistent().execute()).value.status() == 127
 
 
 def test_ok_statuses(test):
     """Tests _ok_statuses option."""
 
-    assert sh.false(_ok_statuses = [ 0, 1 ] ).status() == 1
+    assert sh.false(_ok_statuses = [ 0, 1 ] ).execute().status() == 1
     assert pytest.raises(psh.ExecutionError,
-        lambda: sh.true(_ok_statuses = [])).value.status() == 0
+        lambda: sh.true(_ok_statuses = []).execute()).value.status() == 0
 
 
 
@@ -142,11 +213,11 @@ def test_output(test):
 
     command = "echo тест1; echo тест2 >&2; sleep 1; echo тест3; echo тест4 >&2; "
 
-    process = sh.sh("-c", command)
+    process = sh.sh("-c", command).execute()
     _check_output(process, valid_stdout, valid_stderr)
 
     error = pytest.raises(psh.ExecutionError,
-        lambda: sh.sh("-c", command + " exit 1")).value
+        lambda: sh.sh("-c", command + " exit 1").execute()).value
     _check_output(error, valid_stdout, valid_stderr)
 
 
@@ -169,7 +240,7 @@ def test_large_output(test):
         stderr_tempfile.flush()
 
         process = sh.sh("-c", "cat {stdout} & pid=$!; cat {stderr} >&2; wait $pid;".format(
-            stdout = stdout_tempfile.name, stderr = stderr_tempfile.name))
+            stdout = stdout_tempfile.name, stderr = stderr_tempfile.name)).execute()
 
         assert process.raw_stdout() == stdout
         assert process.raw_stderr() == stderr
@@ -195,3 +266,50 @@ def _check_output(obj, valid_stdout, valid_stderr):
 
     raw_stderr = obj.raw_stderr()
     assert type(raw_stderr) == str and raw_stderr == valid_stderr.encode("utf-8")
+
+
+
+def test_pipes(test):
+    """Tests process pipes."""
+
+    stdin = tempfile.NamedTemporaryFile()
+
+    try:
+        stdin.write("aaaa\nbbbb\n" * 1024 * 100)
+        stdin.flush()
+
+        process = sh.cat(stdin.name) | sh.grep("aaaa") | sh.wc("-l")
+        assert process.execute().stdout().strip() == "102400"
+    finally:
+        stdin.close()
+
+
+def test_abandoned_pipe(test):
+    """Tests that an abandoned pipe doesn't lead to resource leaks."""
+
+    sh.cat("/etc/fstab") | sh.grep("/dev") | sh.wc("-l")
+
+
+def test_pipe_errors(test):
+    """Tests errors in the middle of the pipe."""
+
+    process = sh.echo("aaa") | sh.grep("bbb") | sh.wc("-l")
+    assert pytest.raises(psh.ExecutionError,
+        lambda: process.execute()).value.status() == 1
+
+    process = sh.echo("aaa") | sh.grep("bbb", _ok_statuses = [ 0, 1 ]) | sh.wc("-l")
+    process.execute().stdout().strip() == "0"
+
+
+def test_piping_errors(test):
+    """Tests invalid process piping."""
+
+    process = sh.cat()
+    process | sh.grep()
+    with pytest.raises(psh.InvalidOperation):
+        process | sh.grep()
+
+    process = sh.cat()
+    process | sh.grep()
+    with pytest.raises(psh.InvalidOperation):
+        process.execute()

@@ -24,5 +24,5 @@ class Program:
         return _Command(self.__program, *args, **kwargs)
 
 
-from psh.exceptions import Error, ExecutionError, InvalidProcessState
+from psh.exceptions import Error, ExecutionError, InvalidOperation, InvalidProcessState
 sh = Sh()

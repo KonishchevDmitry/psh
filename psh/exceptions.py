@@ -53,6 +53,13 @@ class ExecutionError(Error):
         return psys.u(self.__stdout)
 
 
+class InvalidOperation(Error):
+    """Raised on attempt to process an invalid operation on a process."""
+
+    def __init__(self, *args, **kwargs):
+        super(InvalidOperation, self).__init__(*args, **kwargs)
+
+
 class InvalidProcessState(Error):
     """
     Raised on attempt to process an operation on a process with an invalid
@@ -61,3 +68,10 @@ class InvalidProcessState(Error):
 
     def __init__(self, *args, **kwargs):
         super(InvalidProcessState, self).__init__(*args, **kwargs)
+
+
+class LogicalError(Error):
+    """Logical error."""
+
+    def __init__(self, error, *args, **kwargs):
+        super(Error, self).__init__("Logical error")

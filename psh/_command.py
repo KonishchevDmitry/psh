@@ -7,35 +7,46 @@ import errno
 import fcntl
 import logging
 import os
+import signal
 import sys
 import threading
+import time
 
 import psys
 import psys.poll
 from psys import eintr_retry
 
-from psh.exceptions import Error
+from psh.exceptions import Error, LogicalError
 from psh.exceptions import ExecutionError
+from psh.exceptions import InvalidOperation
 from psh.exceptions import InvalidProcessState
 
 LOG = logging.getLogger(__name__)
 
 
-_PROCESS_STATE_PENDING = "pending"
+_PROCESS_STATE_PENDING = 0
 """Pending process state."""
 
-_PROCESS_STATE_RUNNING = "running"
+_PROCESS_STATE_SPAWNING = 1
+"""Spawning process state."""
+
+_PROCESS_STATE_RUNNING = 2
 """Running process state."""
 
-_PROCESS_STATE_TERMINATED = "terminated"
+_PROCESS_STATE_TERMINATED = 3
 """Terminated process state."""
 
 
-# TODO: thread safety
 class Command:
-    """Represents an executing command."""
+    """Represents an executing command.
+
+    All public methods are thread-safe.
+    """
 
     def __init__(self, program, *args, **kwargs):
+        # Data lock
+        self.__lock = threading.Lock()
+
         # Current state of the process
         self.__state = _PROCESS_STATE_PENDING
 
@@ -45,6 +56,13 @@ class Command:
 
         # Command's sys.argv
         self.__command = []
+
+
+        # The process' custom stdin source (another process)
+        self.__stdin_source = None
+
+        # The process' custom stdout target (another process)
+        self.__stdout_target = None
 
         # Success status codes for this command
         self.__ok_statuses = [ psys.EXIT_SUCCESS ]
@@ -76,8 +94,8 @@ class Command:
         self.__status = None
 
 
+        # Parse the command arguments
         self.__parse_args(args, kwargs)
-        self.execute()
 
 
     def command(self):
@@ -122,39 +140,60 @@ class Command:
         return command
 
 
-    def execute(self):
+    def execute(self, wait = True):
         """Executes the command."""
 
-        try:
-            self.__execute()
-        except Exception as e:
-            self.__close()
-            self.__join_threads()
-            raise e
-        else:
-            self.wait()
+        self._execute()
 
-            if self.__status not in self.__ok_statuses:
-                raise ExecutionError(self.__status, self.raw_stdout(), self.raw_stderr())
+        if wait:
+            self.wait(check_status = True)
+
+        return self
 
 
-    # TODO
-    #def __or__(self, command):
-    #    """Shell-style pipelines."""
+    def kill(self, signal = signal.SIGTERM):
+        """Kills the process.
 
-    #    LOG.debug("Creating a pipe: %s | %s", self.command_string(), command.command_string())
-    #    return command
+        Returns True if the process received the signal.
+        """
+
+        if self.__state < _PROCESS_STATE_RUNNING:
+            raise InvalidProcessState("Process is not running")
+
+        if self.__state == _PROCESS_STATE_RUNNING:
+            LOG.debug("Send %s signal to %s...", signal, self.command_string())
+
+            try:
+                os.kill(self.__pid, signal)
+            except EnvironmentError as e:
+                if e.errno != errno.ESRCH:
+                    raise e
+            else:
+                return True
+
+        return False
+
+
+    def pid(self):
+        """Returns the process' PID."""
+
+        if self.__state < _PROCESS_STATE_RUNNING:
+            raise InvalidProcessState("Process is not running")
+
+        return self.__pid
 
 
     def raw_stderr(self):
         """Returns the process' raw stderr."""
 
+        self.__ensure_terminated()
         return self.__stderr.getvalue()
 
 
     def raw_stdout(self):
         """Returns the process' raw stdout."""
 
+        self.__ensure_terminated()
         return self.__stdout.getvalue()
 
 
@@ -177,85 +216,86 @@ class Command:
         return psys.u(self.raw_stdout())
 
 
-    def wait(self):
-        """Waits for the process termination."""
+    def wait(self, check_status = False, kill = None):
+        """Waits for the process termination.
 
-        if self.__state not in ( _PROCESS_STATE_RUNNING, _PROCESS_STATE_TERMINATED ):
+        If kill is not None kills the process with the signal == kill and
+        waits for its termination.
+        """
+
+        if self.__state < _PROCESS_STATE_RUNNING:
             raise InvalidProcessState("Process is not running")
 
+        LOG.debug("Waiting for %s termination%s...", self.command_string(),
+            "" if kill is None else " killing it with {0} signal".format(kill))
+
+        if kill is not None:
+            while self.kill(kill):
+                if self.__join_threads(0.1):
+                    break
+
         self.__join_threads()
+
+        if self.__stdin_source is not None:
+            self.__stdin_source.wait(
+                check_status = check_status, kill = kill)
+
+        if check_status and self.__status not in self.__ok_statuses:
+            raise ExecutionError(self.__status, self.raw_stdout(), self.raw_stderr())
 
         return self.__status
 
 
-    def __ensure_terminated(self):
-        """Ensures that the process is terminated."""
-
-        if self.__state != _PROCESS_STATE_TERMINATED:
-            raise InvalidProcessState("Process is not terminated")
-
-
-    def __execute(self):
+    def _execute(self, stdout = None, check_pipes = True):
         """Executes the command."""
+
+        with self.__lock:
+            if self.__state != _PROCESS_STATE_PENDING:
+                raise InvalidOperation("The process has been executed already")
+
+            if check_pipes and self.__stdout_target is not None:
+                raise InvalidOperation("Only the last process of the pipe can be executed")
+
+            self.__state = _PROCESS_STATE_SPAWNING
 
         LOG.debug("Executing %s", self.command_string())
 
-        # Creating stdin/stdout/stderr pipes
-        for fd in ( psys.STDIN_FILENO, psys.STDOUT_FILENO, psys.STDERR_FILENO ):
-            self.__pipes.append(_Pipe(fd, output = bool(fd)))
+        try:
+            self.__execute(stdout)
+        except Exception as e:
+            self.__close()
+            self.__join_threads()
 
-        # Fork the process -->
-        fork_lock = threading.Lock()
+            if (
+                self.__stdin_source is not None and
+                self.__stdin_source._state() >= _PROCESS_STATE_RUNNING
+            ):
+                self.__stderr.wait(kill = signal.SIGTERM)
 
-        with fork_lock:
-            # Allocate all resources before fork() to guarantee that we will
-            # be able to control the process execution.
-
-            # Execution thread -->
-            poll = psys.poll.Poll()
-
-            try:
-                self.__communication_thread = threading.Thread(
-                    target = self.__communication_thread_func,
-                    args = [ fork_lock, poll ])
-
-                self.__communication_thread.daemon = True
-                self.__communication_thread.start()
-            except Exception as e:
-                poll.close()
-                raise e
-            # Execution thread <--
-
-            # Wait thread -->
-            try:
-                self.__termination_fd, termination_fd = os.pipe()
-            except Exception as e:
-                raise Error("Unable to create a pipe: {0}.", psys.e(e))
-
-            try:
-                self.__wait_thread = threading.Thread(
-                    target = self.__wait_pid_thread, args = [ fork_lock, termination_fd ])
-                self.__wait_thread.daemon = True
-                self.__wait_thread.start()
-            except Exception as error:
-                try:
-                    eintr_retry(os.close)(termination_fd)
-                except Exception as e:
-                    LOG.error("Unable to close a pipe: %s.", psys.e(e))
-
-                raise error
-            # Wait thread <--
-
-            self.__pid = os.fork()
-
-            if self.__pid:
-                self.__state = _PROCESS_STATE_RUNNING
-            else:
-                self.__child()
-        # Fork the process <--
+            raise e
 
 
-    # TODO: close all fds
+    def _pipe_process(self, command):
+        """Creates a pipe between two processes."""
+
+        with self.__lock:
+            if self.__state != _PROCESS_STATE_PENDING:
+                raise InvalidProcessState("Process can't be piped after execution")
+
+            if self.__stdin_source is not None:
+                raise InvalidOperation("The process' stdin is already redirected")
+
+            LOG.debug("Creating a pipe: %s | %s", command.command_string(), self.command_string())
+
+            self.__stdin_source = command
+
+
+    def _state(self):
+        """Returns current process state."""
+
+        return self.__state
+
+
     def __child(self):
         """Handles child process execution."""
 
@@ -272,6 +312,8 @@ class Command:
                         raise Error("Unable to connect a pipe to file descriptor {0}: {1}", pipe.source, psys.e(e))
 
                     pipe.close()
+
+                psys.close_all_fds()
 
                 exec_error = True
                 os.execvp(self.__program, self.__command)
@@ -314,6 +356,9 @@ class Command:
 
         for pipe in self.__pipes:
             fd = pipe.read if pipe.output else pipe.write
+            if fd is None:
+                continue
+
             pipe_map[fd] = pipe
 
             flags = eintr_retry(fcntl.fcntl)(fd, fcntl.F_GETFL)
@@ -370,7 +415,7 @@ class Command:
                     else:
                         poll.unregister(fd)
                 else:
-                    raise Exception("Logical error")
+                    raise LogicalError()
 
 
         # The process has terminated, but we should continue communication to
@@ -382,7 +427,10 @@ class Command:
         max_data_size = 1024 * 1024
 
         for pipe in self.__pipes:
-            if pipe.source in ( psys.STDOUT_FILENO, psys.STDERR_FILENO ):
+            if (
+                pipe.source in ( psys.STDOUT_FILENO, psys.STDERR_FILENO ) and
+                pipe.read is not None
+            ):
                 size = 0
 
                 while size < max_data_size:
@@ -424,19 +472,102 @@ class Command:
             poll.close()
 
 
-    def __join_threads(self):
+    def __ensure_terminated(self):
+        """Ensures that the process is terminated."""
+
+        if self.__state != _PROCESS_STATE_TERMINATED:
+            raise InvalidProcessState("Process is not terminated")
+
+
+    def __execute(self, stdout):
+        """Executes the command."""
+
+        # Create stdin/stdout/stderr pipes
+        for fd in ( psys.STDIN_FILENO, psys.STDOUT_FILENO, psys.STDERR_FILENO ):
+            self.__pipes.append(_Pipe(fd, output = bool(fd),
+                pipe = stdout if fd == psys.STDOUT_FILENO else None))
+
+        # Execute all processes in the pipe
+        if self.__stdin_source is not None:
+            for pipe in self.__pipes:
+                if pipe.source == psys.STDIN_FILENO:
+                    self.__stdin_source._execute(stdout = pipe, check_pipes = False)
+                    break
+            else:
+                raise LogicalError()
+
+        # Fork the process -->
+        fork_lock = threading.Lock()
+
+        with fork_lock:
+            # Allocate all resources before fork() to guarantee that we will
+            # be able to control the process execution.
+
+            # Execution thread -->
+            poll = psys.poll.Poll()
+
+            try:
+                self.__communication_thread = threading.Thread(
+                    target = self.__communication_thread_func,
+                    args = [ fork_lock, poll ])
+
+                self.__communication_thread.daemon = True
+                self.__communication_thread.start()
+            except Exception as e:
+                poll.close()
+                raise e
+            # Execution thread <--
+
+            # Wait thread -->
+            try:
+                self.__termination_fd, termination_fd = os.pipe()
+            except Exception as e:
+                raise Error("Unable to create a pipe: {0}.", psys.e(e))
+
+            try:
+                self.__wait_thread = threading.Thread(
+                    target = self.__wait_pid_thread, args = [ fork_lock, termination_fd ])
+                self.__wait_thread.daemon = True
+                self.__wait_thread.start()
+            except Exception as error:
+                try:
+                    eintr_retry(os.close)(termination_fd)
+                except Exception as e:
+                    LOG.error("Unable to close a pipe: %s.", psys.e(e))
+
+                raise error
+            # Wait thread <--
+
+            self.__pid = os.fork()
+
+            if self.__pid:
+                self.__state = _PROCESS_STATE_RUNNING
+            else:
+                self.__child()
+        # Fork the process <--
+
+
+    def __join_threads(self, timeout = None):
         """Joins all spawned threads."""
 
-        if self.__wait_thread is not None:
-            self.__wait_thread.join()
+        if timeout is not None:
+            end_time = time.time() + timeout
 
-        if self.__communication_thread is not None:
-            self.__communication_thread.join()
+        if not psys.join_thread(self.__wait_thread,
+            timeout = None if timeout is None else end_time - time.time()):
+            return False
+
+        if not psys.join_thread(self.__communication_thread,
+            timeout = None if timeout is None else end_time - time.time()):
+            return False
+
+        return True
 
 
     def __on_input(self):
         """Called when we are ready to send stdin data to the process."""
 
+        # TODO: convert unicode
         return None
 
 
@@ -444,6 +575,22 @@ class Command:
         """Called when we got stdout/stderr data from the process."""
 
         (self.__stdout if fd == psys.STDOUT_FILENO else self.__stderr).write(data)
+
+
+    def __or__(self, command):
+        """Shell-style pipelines."""
+
+        with self.__lock:
+            if self.__state != _PROCESS_STATE_PENDING:
+                raise InvalidProcessState("Process can't be piped after execution")
+
+            if self.__stdout_target is not None:
+                raise InvalidOperation("The process' stdout is already redirected")
+
+            command._pipe_process(self)
+            self.__stdout_target = command
+
+            return command
 
 
     def __parse_args(self, args, kwargs):
@@ -512,17 +659,28 @@ class Command:
 class _Pipe():
     """Represents a pipe between two processes."""
 
-    def __init__(self, source, output = True):
+    def __init__(self, source, output = True, pipe = None):
         # File descriptor that we are going to replace by this pipe
         self.source = source
 
         # True if this is output file descriptor
         self.output = output
 
-        try:
-            self.read, self.write = os.pipe()
-        except Exception as e:
-            raise Error("Unable to create a pipe: {0}.", psys.e(e))
+        if pipe is None:
+            try:
+                self.read, self.write = os.pipe()
+                #print "####", self.read, self.write
+            except Exception as e:
+                raise Error("Unable to create a pipe: {0}.", psys.e(e))
+        else:
+            if output:
+                self.read = None
+                self.write = pipe.write
+                pipe.write = None
+            else:
+                self.read = pipe.read
+                pipe.read = None
+                self.write = None
 
 
     def __del__(self):

@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 
-from psh._command import Command as _Command
+from psh._command import Process
 
 
 class Sh(object):
@@ -21,7 +21,7 @@ class Program:
 
 
     def __call__(self, *args, **kwargs):
-        return _Command(self.__program, *args, **kwargs)
+        return Process(self.__program, *args, **kwargs)
 
 
 from psh.exceptions import *

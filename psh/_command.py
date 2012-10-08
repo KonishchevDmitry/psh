@@ -1,4 +1,4 @@
-"""Controls command executing."""
+"""Controls process execution."""
 
 from __future__ import unicode_literals
 
@@ -48,8 +48,8 @@ _PROCESS_STATE_TERMINATED = 3
 # when Python's garbage collector consider to destroy them.
 #
 # If the process 
-class Command:
-    """Represents an executing command."""
+class Process:
+    """Represents a process."""
 
     __stdin_source = None
     """
@@ -92,14 +92,14 @@ class Command:
         # Program name or full path
         self.__program = program
 
-        # Command's sys.argv
+        # Process' sys.argv
         self.__command = []
 
         # Success status codes for this command
         self.__ok_statuses = [ psys.EXIT_SUCCESS ]
 
 
-        # Command's pipes
+        # Process' pipes
         self.__pipes = []
 
         # A pipe to signal about the process termination
@@ -118,13 +118,13 @@ class Command:
         # PID of the process
         self.__pid = None
 
-        # Command's stdout
+        # Process' stdout
         self.__stdout = cStringIO.StringIO()
 
-        # Command's stderr
+        # Process' stderr
         self.__stderr = cStringIO.StringIO()
 
-        # Command's termination status
+        # Process' termination status
         self.__status = None
 
 
@@ -177,10 +177,10 @@ class Command:
         return iterator
 
 
-    def __or__(self, command):
+    def __or__(self, process):
         """Shell-style pipelines."""
 
-        if not isinstance(command, Command):
+        if not isinstance(process, Process):
             raise InvalidOperation("Process may be piped only with another process")
 
         with self.__lock:
@@ -190,10 +190,10 @@ class Command:
             if self.__stdout_target is not None:
                 raise InvalidOperation("The process' stdout is already redirected")
 
-            command._pipe_process(self)
-            self.__stdout_target = command
+            process._pipe_process(self)
+            self.__stdout_target = process
 
-            return command
+            return process
 
 
     def command(self):
@@ -377,7 +377,7 @@ class Command:
             raise
 
 
-    def _pipe_process(self, command):
+    def _pipe_process(self, process):
         """Creates a pipe between two processes."""
 
         with self.__lock:
@@ -387,9 +387,9 @@ class Command:
             if self.__stdin_source is not None:
                 raise InvalidOperation("The process' stdin is already redirected")
 
-            LOG.debug("Creating a pipe: %s | %s", command.command_string(), self.command_string())
+            LOG.debug("Creating a pipe: %s | %s", process.command_string(), self.command_string())
 
-            self.__stdin_source = command
+            self.__stdin_source = process
 
 
     def _state(self):
@@ -740,7 +740,7 @@ class Command:
     def __piped_from_process(self):
         """Returns True if this process is piped from another process."""
 
-        return self.__stdin_source is not None and isinstance(self.__stdin_source, Command)
+        return self.__stdin_source is not None and isinstance(self.__stdin_source, Process)
 
 
     def __wait_pid_thread(self, fork_lock, termination_fd):

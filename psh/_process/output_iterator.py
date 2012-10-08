@@ -159,6 +159,7 @@ class OutputIterator:
         else:
             if not data:
                 self.__data = None
+                self.__finalize()
                 raise StopIteration()
 
             return data

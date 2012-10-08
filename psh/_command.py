@@ -17,6 +17,7 @@ import psys
 import psys.poll
 from psys import eintr_retry
 
+import psh
 from psh.exceptions import Error, LogicalError
 from psh.exceptions import ExecutionError
 from psh.exceptions import InvalidArgument
@@ -39,11 +40,29 @@ _PROCESS_STATE_TERMINATED = 3
 """Terminated process state."""
 
 
+# TODO: thread safety guaranties
+# If you iterate over process output you should do it within 'with' context to
+# guarantee that all opened file descriptors will be closed as soon as you end
+# iteration or leave the 'with' context. Otherwise they will be closed only
+# when Python's garbage collector consider to destroy them.
+#
+# If the process 
 class Command:
-    """Represents an executing command.
+    """Represents an executing command."""
 
-    All public methods are thread-safe.
+    __iter_raw = False
     """
+    True if output iteration will be on raw strings instead of unicode
+    strings.
+    """
+
+    __iter_delimiter = b"\n"
+    """
+    Separator which will be used as a delimiter for process output
+    iteration.
+    """
+    # TODO: move here optional fields
+
 
     def __init__(self, program, *args, **kwargs):
         # Data lock
@@ -86,6 +105,9 @@ class Command:
         # A thread in which we wait for process termination
         self.__wait_thread = None
 
+        # Objects that must be closed when leaving 'with' context
+        self.__context_objects = []
+
 
         # PID of the process
         self.__pid = None
@@ -105,6 +127,68 @@ class Command:
 
         # Parse the command arguments
         self.__parse_args(args, kwargs)
+
+
+    def __enter__(self):
+        """
+        'with' operator guarantees that the process will be wait()'ed and the
+        output iterator will be closed (if created).
+        """
+
+        return self
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Waits for the process termination."""
+
+        with self.__lock:
+            context_objects = self.__context_objects
+            self.__context_objects = []
+
+        for obj in context_objects:
+            obj.close()
+
+        if self.__state >= _PROCESS_STATE_RUNNING:
+            self.wait()
+
+        return False
+
+
+    def __iter__(self):
+        """Executes the process and returns a line iterator to its output."""
+
+        iterator = _OutputIterator(
+            self, self.__iter_raw, self.__iter_delimiter)
+
+        try:
+            self._execute(stdout = iterator.pipe())
+
+            with self.__lock:
+                self.__context_objects.append(iterator)
+        except:
+            iterator.close()
+            raise
+
+        return iterator
+
+
+    def __or__(self, command):
+        """Shell-style pipelines."""
+
+        if not isinstance(command, Command):
+            raise InvalidOperation("Process may be piped only with another process")
+
+        with self.__lock:
+            if self.__state != _PROCESS_STATE_PENDING:
+                raise InvalidProcessState("Process can't be piped after execution")
+
+            if self.__stdout_target is not None:
+                raise InvalidOperation("The process' stdout is already redirected")
+
+            command._pipe_process(self)
+            self.__stdout_target = command
+
+            return command
 
 
     def command(self):
@@ -275,7 +359,7 @@ class Command:
 
         try:
             self.__execute(stdout)
-        except Exception as e:
+        except:
             self.__close()
             self.__join_threads()
 
@@ -285,7 +369,7 @@ class Command:
             ):
                 self.__stdin_source.wait(kill = signal.SIGTERM)
 
-            raise e
+            raise
 
 
     def _pipe_process(self, command):
@@ -388,6 +472,7 @@ class Command:
         terminated = False
 
         while not terminated:
+            # TODO: read all
             for fd, flags in poll.poll():
                 # Process termination
                 if fd == self.__termination_fd:
@@ -552,9 +637,9 @@ class Command:
 
                 self.__communication_thread.daemon = True
                 self.__communication_thread.start()
-            except Exception as e:
+            except:
                 poll.close()
-                raise e
+                raise
             # Execution thread <--
 
             # Wait thread -->
@@ -568,7 +653,7 @@ class Command:
                     target = self.__wait_pid_thread, args = [ fork_lock, termination_fd ])
                 self.__wait_thread.daemon = True
                 self.__wait_thread.start()
-            except Exception as error:
+            except BaseException as error:
                 try:
                     eintr_retry(os.close)(termination_fd)
                 except Exception as e:
@@ -609,38 +694,29 @@ class Command:
         (self.__stdout if fd == psys.STDOUT_FILENO else self.__stderr).write(data)
 
 
-    def __or__(self, command):
-        """Shell-style pipelines."""
-
-        if not isinstance(command, Command):
-            raise InvalidOperation("Process may be piped only with another process")
-
-        with self.__lock:
-            if self.__state != _PROCESS_STATE_PENDING:
-                raise InvalidProcessState("Process can't be piped after execution")
-
-            if self.__stdout_target is not None:
-                raise InvalidOperation("The process' stdout is already redirected")
-
-            command._pipe_process(self)
-            self.__stdout_target = command
-
-            return command
-
-
     def __parse_args(self, args, kwargs):
         """Parses command arguments and options."""
+
+        def check_arg_type(option, value, types):
+            if not isinstance(value, types):
+                raise InvalidArgument("Invalid value type for option {0}", option)
 
         self.__command.append(self.__program)
 
         for option, value in kwargs.iteritems():
             if option.startswith("_"):
-                if option == "_ok_statuses":
+                if option == "_iter_delimiter":
+                    check_arg_type(option, value, basestring)
+                    if isinstance(value, unicode):
+                        value = psys.b(value)
+                    self.__iter_delimiter = value
+                elif option == "_iter_raw":
+                    check_arg_type(option, value, bool)
+                    self.__iter_raw = value
+                elif option == "_ok_statuses":
                     self.__ok_statuses = [ int(status) for status in value ]
                 elif option == "_stdin":
-                    if not isinstance(value, ( str, unicode, collections.Iterator )):
-                        raise InvalidArgument("Invalid stdin source")
-
+                    check_arg_type(option, value, ( str, unicode, collections.Iterator ))
                     self.__stdin_source = value
                 else:
                     raise InvalidArgument("Invalid option: {0}", option)
@@ -702,6 +778,167 @@ class Command:
 
 
 
+# TODO: circular dependency
+# TODO: read all or not
+class _OutputIterator:
+    """Process output iterator."""
+
+    def __init__(self, process, raw, delimiter):
+        # The process
+        self.__process = process
+
+        # Raw or unicode string iteration
+        self.__raw = raw
+
+        # Block delimiter
+        self.__delimiter = delimiter
+
+        # Output pipe
+        self.__pipe = None
+
+        # Polling object
+        self.__poll = None
+
+        # Output data buffer. None indicates EOF.
+        self.__data = b""
+
+        # Is the iterator closed
+        self.__closed = False
+
+        if delimiter:
+            self.__iter = self.__iter_with_delimiter
+        else:
+            if raw:
+                self.__iter = self.__iter_without_delimiter
+            else:
+                raise InvalidOperation("Can't iterate over unicode data without delimiter")
+
+        try:
+            self.__pipe = _Pipe(psys.STDOUT_FILENO)
+            flags = eintr_retry(fcntl.fcntl)(self.__pipe.read, fcntl.F_GETFL)
+            eintr_retry(fcntl.fcntl)(self.__pipe.read, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+            self.__poll = psys.poll.Poll()
+            self.__poll.register(self.__pipe.read, self.__poll.POLLIN)
+        except:
+            self.close()
+            raise
+
+
+    def __del__(self):
+        # Don't close the object in unit tests to be able to detect leaks
+        if not hasattr(psh, "_UNIT_TEST"):
+            self.close()
+
+
+    def close(self):
+        """Closes the iterator."""
+
+        if self.__closed:
+            return
+
+        if self.__poll is not None:
+            self.__poll.close()
+
+        if self.__pipe is not None:
+            self.__pipe.close()
+
+        self.__closed = True
+
+
+    def next(self):
+        """Iterator's 'next' method."""
+
+        if self.__data is None:
+            raise StopIteration()
+
+        if self.__closed:
+            raise InvalidOperation("The iterator is closed")
+
+        return self.__iter()
+
+
+    def pipe(self):
+        """Returns the output pipe."""
+
+        return self.__pipe
+
+
+    def __finalize(self, check_status = True):
+        """Finalizes the iterator (on error or when we read all data)."""
+
+        self.close()
+        self.__process.wait(check_status)
+
+
+    def __iter_with_delimiter(self):
+        """Iterates over the data splitting it with the delimiter."""
+
+        try:
+            pos = self.__data.index(self.__delimiter)
+        except ValueError:
+            while True:
+                try:
+                    self.__poll.poll()
+                    data = eintr_retry(os.read)(self.__pipe.read, psys.BUFSIZE)
+                except:
+                    self.__finalize(check_status = False)
+                    raise
+
+                if data:
+                    try:
+                        pos = data.index(self.__delimiter)
+                    except ValueError:
+                        self.__data += data
+                    else:
+                        block = self.__data + data[:pos + 1]
+                        self.__data = data[pos + 1:]
+                        return self.__transform_block(block)
+                else:
+                    block = self.__data
+                    self.__data = None
+                    self.__finalize()
+
+                    if not block:
+                        raise StopIteration()
+
+                    return self.__transform_block(block)
+        else:
+            block = self.__data[:pos + 1]
+            self.__data = self.__data[pos + 1:]
+            return self.__transform_block(block)
+
+
+    def __iter_without_delimiter(self):
+        """Iterates over the data."""
+
+        try:
+            self.__poll.poll()
+            data = eintr_retry(os.read)(self.__pipe.read, psys.BUFSIZE)
+        except:
+            self.__finalize()
+            raise
+        else:
+            if not data:
+                self.__data = None
+                raise StopIteration()
+
+            return data
+
+
+    def __transform_block(self, block):
+        """Transforms the data block to the output format."""
+
+        if self.__raw:
+            return block
+        else:
+            try:
+                return psys.u(block)
+            except:
+                self.__finalize()
+                raise
+
+
 class _Pipe():
     """Represents a pipe between two processes."""
 
@@ -715,7 +952,6 @@ class _Pipe():
         if pipe is None:
             try:
                 self.read, self.write = os.pipe()
-                #print "####", self.read, self.write
             except Exception as e:
                 raise Error("Unable to create a pipe: {0}.", psys.e(e))
         else:
@@ -730,7 +966,9 @@ class _Pipe():
 
 
     def __del__(self):
-        self.close()
+        # Don't close the object in unit tests to be able to detect leaks
+        if not hasattr(psh, "_UNIT_TEST"):
+            self.close()
 
 
     def close(self, read = True, write = True):

@@ -51,6 +51,19 @@ _PROCESS_STATE_TERMINATED = 3
 class Command:
     """Represents an executing command."""
 
+    __stdin_source = None
+    """
+    The process' custom stdin source (another process, string or
+    generator).
+    """
+
+    __stdin_generator = None
+    """stdin generator."""
+
+    __stdout_target = None
+    """The process' custom stdout target (another process)."""
+
+
     __iter_raw = False
     """
     True if output iteration will be on raw strings instead of unicode
@@ -62,7 +75,10 @@ class Command:
     Separator which will be used as a delimiter for process output
     iteration.
     """
-    # TODO: move here optional fields
+
+
+    __error = None
+    """Execution error if occurred."""
 
 
     def __init__(self, program, *args, **kwargs):
@@ -78,17 +94,6 @@ class Command:
 
         # Command's sys.argv
         self.__command = []
-
-
-        # The process' custom stdin source (another process, string or
-        # generator)
-        self.__stdin_source = None
-
-        # stdin generator
-        self.__stdin_generator = None
-
-        # The process' custom stdout target (another process)
-        self.__stdout_target = None
 
         # Success status codes for this command
         self.__ok_statuses = [ psys.EXIT_SUCCESS ]
@@ -121,9 +126,6 @@ class Command:
 
         # Command's termination status
         self.__status = None
-
-        # Execution error if occurred
-        self.__error = None
 
 
         # Parse the command arguments

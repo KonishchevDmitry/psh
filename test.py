@@ -293,6 +293,7 @@ def test_string_input(test):
     assert sh.grep("тест", _stdin = b"aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
 
 
+# TODO: from file
 def test_iterator_input(test):
     """Tests process input from string."""
 

@@ -12,6 +12,7 @@ import signal
 import sys
 import threading
 import time
+import weakref
 
 import psys
 import psys.poll
@@ -146,7 +147,9 @@ class Command:
             self.__context_objects = []
 
         for obj in context_objects:
-            obj.close()
+            obj = obj()
+            if obj is not None:
+                obj.close()
 
         if self.__state >= _PROCESS_STATE_RUNNING:
             self.wait()
@@ -164,7 +167,7 @@ class Command:
             self._execute(stdout = iterator.pipe())
 
             with self.__lock:
-                self.__context_objects.append(iterator)
+                self.__context_objects.append(weakref.ref(iterator))
         except:
             iterator.close()
             raise
@@ -778,7 +781,6 @@ class Command:
 
 
 
-# TODO: circular dependency
 # TODO: read all or not
 class _OutputIterator:
     """Process output iterator."""

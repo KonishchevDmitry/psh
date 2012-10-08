@@ -622,6 +622,8 @@ class Process:
             self.__stdin_generator = iter([ self.__stdin_source ])
         elif isinstance(self.__stdin_source, collections.Iterator):
             self.__stdin_generator = self.__stdin_source
+        elif isinstance(self.__stdin_source, collections.Iterable):
+            self.__stdin_generator = iter(self.__stdin_source)
         else:
             raise LogicalError()
         # Configure stdin <--
@@ -722,7 +724,8 @@ class Process:
                 elif option == "_ok_statuses":
                     self.__ok_statuses = [ int(status) for status in value ]
                 elif option == "_stdin":
-                    check_arg_type(option, value, ( str, unicode, collections.Iterator ))
+                    check_arg_type(option, value,
+                        ( str, unicode, collections.Iterator, collections.Iterable ))
                     self.__stdin_source = value
                 else:
                     raise InvalidArgument("Invalid option: {0}", option)

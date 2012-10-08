@@ -293,7 +293,6 @@ def test_string_input(test):
     assert sh.grep("тест", _stdin = b"aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
 
 
-# TODO: from file
 def test_iterator_input(test):
     """Tests process input from string."""
 
@@ -304,6 +303,20 @@ def test_iterator_input(test):
             yield "\n" + str(i) if i else str(i)
 
     assert sh.cat(_stdin = func()).execute().stdout() == stdout
+
+
+def test_file_input(test):
+    """Tests process input from file."""
+
+    with tempfile.NamedTemporaryFile() as temp_file:
+        with open("/dev/urandom") as random:
+            stdout = random.read(1024 * 1024)
+
+        temp_file.write(stdout)
+        temp_file.flush()
+
+        with open(temp_file.name) as stdin:
+            assert sh.cat(_stdin = stdin).execute().raw_stdout() == stdout
 
 
 def test_invalid_input(test):

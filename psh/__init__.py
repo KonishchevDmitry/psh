@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 
-from psh._command import Process
+import psh.process
 
 
 class Sh(object):
@@ -21,8 +21,8 @@ class Program:
 
 
     def __call__(self, *args, **kwargs):
-        return Process(self.__program, *args, **kwargs)
+        return psh.process.Process(self.__program, *args, **kwargs)
 
 
-from psh.exceptions import *
+from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState
 sh = Sh()

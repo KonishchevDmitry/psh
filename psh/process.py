@@ -42,13 +42,6 @@ _PROCESS_STATE_TERMINATED = 3
 """Terminated process state."""
 
 
-# TODO: thread safety guaranties
-# If you iterate over process output you should do it within 'with' context to
-# guarantee that all opened file descriptors will be closed as soon as you end
-# iteration or leave the 'with' context. Otherwise they will be closed only
-# when Python's garbage collector consider to destroy them.
-#
-# If the process 
 class Process:
     """Represents a process."""
 

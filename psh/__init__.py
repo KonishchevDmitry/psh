@@ -57,4 +57,6 @@ class Program:
 
 
 from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState
+from psh.process import File, STDOUT, STDERR, DEVNULL
+
 sh = Sh()

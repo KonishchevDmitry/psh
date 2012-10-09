@@ -80,5 +80,5 @@ class InvalidProcessState(Error):
 class LogicalError(Error):
     """Logical error."""
 
-    def __init__(self, error, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(Error, self).__init__("Logical error")

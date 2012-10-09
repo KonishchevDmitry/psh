@@ -29,6 +29,26 @@ from psh._process.pipe import Pipe
 LOG = logging.getLogger(__name__)
 
 
+class PIPE: pass
+"""A value to configure redirection of stdout/stderr to a pipe."""
+
+class STDOUT: pass
+"""A value to configure redirection of stdout/stderr to stdout."""
+
+class STDERR: pass
+"""A value to configure redirection of stdout/stderr to stderr."""
+
+class File(object):
+    """A class to configure redirection of stdin/stdout/stderr from/to a file."""
+
+    def __init__(self, path, append = False):
+        self.path = path
+        self.append = append
+
+DEVNULL = File("/dev/null")
+"""A value to configure redirection of stdin/stdout/stderr from/to /dev/null."""
+
+
 _PROCESS_STATE_PENDING = 0
 """Pending process state."""
 
@@ -46,16 +66,16 @@ class Process:
     """Represents a process."""
 
     __stdin_source = None
-    """
-    The process' custom stdin source (another process, string or
-    generator).
-    """
+    """The process' stdin source (another process, string, etc.)."""
 
     __stdin_generator = None
     """stdin generator."""
 
-    __stdout_target = None
-    """The process' custom stdout target (another process)."""
+    __stdout_target = PIPE
+    """The process' stdout target (another process, stderr, etc.)."""
+
+    __stderr_target = PIPE
+    """The process' stderr target (another process, stdout, etc.)."""
 
 
     __iter_raw = False
@@ -181,7 +201,7 @@ class Process:
             if self.__state != _PROCESS_STATE_PENDING:
                 raise InvalidProcessState("Process can't be piped after execution")
 
-            if self.__stdout_target is not None:
+            if self.__stdout_target is not PIPE:
                 raise InvalidOperation("The process' stdout is already redirected")
 
             process._pipe_process(self)
@@ -349,7 +369,7 @@ class Process:
             if self.__state != _PROCESS_STATE_PENDING:
                 raise InvalidOperation("The process has been executed already")
 
-            if check_pipes and self.__stdout_target is not None:
+            if check_pipes and self.__piped_to_process():
                 raise InvalidOperation("Only the last process of the pipe can be executed")
 
             self.__state = _PROCESS_STATE_SPAWNING
@@ -382,7 +402,6 @@ class Process:
                 raise InvalidOperation("The process' stdin is already redirected")
 
             LOG.debug("Creating a pipe: %s | %s", process.command_string(), self.command_string())
-
             self.__stdin_source = process
 
 
@@ -401,15 +420,65 @@ class Process:
             exec_error = False
 
             try:
+                fd_name = {
+                    0: "stdin",
+                    1: "stdout",
+                    2: "stderr",
+                }
+
+                def redirect_fd(path, fd, write = True, append = False):
+                    try:
+                        if write:
+                            file_fd = eintr_retry(os.open)(
+                                path, os.O_WRONLY | os.O_CREAT | ( os.O_APPEND if append else 0 ), 0666)
+                        else:
+                            file_fd = eintr_retry(os.open)(path, os.O_RDONLY)
+
+                        try:
+                            eintr_retry(os.dup2)(file_fd, fd)
+                        finally:
+                            eintr_retry(os.close)(file_fd)
+                    except Exception as e:
+                        raise Error("Unable to redirect {0} to {1}: {2}",
+                            fd_name[fd] if write else "'" + path + "'",
+                            "'" + path + "'" if write else fd_name[fd], psys.e(e))
+
+                # Connect all pipes
                 for pipe in self.__pipes:
                     try:
                         eintr_retry(os.dup2)(pipe.write if pipe.output else pipe.read, pipe.source)
                     except Exception as e:
-                        raise Error("Unable to connect a pipe to file descriptor {0}: {1}", pipe.source, psys.e(e))
+                        raise Error("Unable to connect a pipe to {0}: {1}",
+                            fd_name[pipe.source], psys.e(e))
 
                     pipe.close()
 
+                # Close all file descriptors
                 psys.close_all_fds()
+
+                # Configure stdin
+                if isinstance(self.__stdin_source, File):
+                    redirect_fd(self.__stdin_source.path, psys.STDIN_FILENO, write = False)
+
+                # Configure stdout
+                if self.__stdout_target is STDERR:
+                    try:
+                        eintr_retry(os.dup2)(psys.STDERR_FILENO, psys.STDOUT_FILENO)
+                    except Exception as e:
+                        raise Error("Unable to redirect stderr to stdout: {0}", psys.e(e))
+                elif isinstance(self.__stdout_target, File):
+                    redirect_fd(self.__stdout_target.path, psys.STDOUT_FILENO,
+                        append = self.__stdout_target.append)
+
+                # Configure stderr
+                if self.__stderr_target is STDOUT:
+                    try:
+                        eintr_retry(os.dup2)(psys.STDOUT_FILENO, psys.STDERR_FILENO)
+                    except Exception as e:
+                        raise Error("Unable to redirect stderr to stdout: {0}", psys.e(e))
+                elif isinstance(self.__stderr_target, File):
+                    redirect_fd(self.__stderr_target.path, psys.STDERR_FILENO,
+                        append = self.__stderr_target.append)
 
                 exec_error = True
                 os.execvp(self.__program, self.__command)
@@ -583,6 +652,56 @@ class Process:
             poll.close()
 
 
+    def __configure_stdio(self, stdout):
+        """Configures the standard I/O file descriptors."""
+
+        # stdin -->
+        if self.__stdin_source is None:
+            self.__stdin_source = DEVNULL
+        elif isinstance(self.__stdin_source, File):
+            pass
+        elif self.__piped_from_process():
+            # Connect and execute all processes in the pipe
+
+            pipe = Pipe(psys.STDIN_FILENO, output = False)
+            self.__pipes.append(pipe)
+
+            self.__stdin_source._execute(
+                stdout = pipe, check_pipes = False)
+        else:
+            if isinstance(self.__stdin_source, basestring):
+                self.__stdin_generator = iter([ self.__stdin_source ])
+            elif isinstance(self.__stdin_source, collections.Iterator):
+                self.__stdin_generator = self.__stdin_source
+            elif isinstance(self.__stdin_source, collections.Iterable):
+                self.__stdin_generator = iter(self.__stdin_source)
+            else:
+                raise LogicalError()
+
+            pipe = Pipe(psys.STDIN_FILENO, output = False)
+            self.__pipes.append(pipe)
+        # stdin <--
+
+        # stdout -->
+        if self.__stdout_target in ( STDOUT, STDERR ) or isinstance(self.__stdout_target, File):
+            if stdout is not None:
+                raise LogicalError()
+        elif self.__stdout_target is PIPE or self.__piped_to_process():
+            self.__pipes.append(Pipe(psys.STDOUT_FILENO, pipe = stdout))
+        else:
+            raise LogicalError()
+        # stdout <--
+
+        # stderr -->
+        if self.__stderr_target in ( STDOUT, STDERR ) or isinstance(self.__stderr_target, File):
+            pass
+        elif self.__stderr_target is PIPE:
+            self.__pipes.append(Pipe(psys.STDERR_FILENO))
+        else:
+            raise LogicalError()
+        # stdout <--
+
+
     def __ensure_terminated(self):
         """Ensures that the process is terminated."""
 
@@ -593,33 +712,8 @@ class Process:
     def __execute(self, stdout):
         """Executes the command."""
 
-        # Create stdin/stdout/stderr pipes
-        for fd in ( psys.STDIN_FILENO, psys.STDOUT_FILENO, psys.STDERR_FILENO ):
-            self.__pipes.append(Pipe(fd, output = bool(fd),
-                pipe = stdout if fd == psys.STDOUT_FILENO else None))
-
-        # Configure stdin -->
-        if self.__stdin_source is None:
-            self.__stdin_generator = iter([])
-        elif self.__piped_from_process():
-            # Execute all processes in the pipe
-
-            for pipe in self.__pipes:
-                if pipe.source == psys.STDIN_FILENO:
-                    self.__stdin_source._execute(
-                        stdout = pipe, check_pipes = False)
-                    break
-            else:
-                raise LogicalError()
-        elif isinstance(self.__stdin_source, basestring):
-            self.__stdin_generator = iter([ self.__stdin_source ])
-        elif isinstance(self.__stdin_source, collections.Iterator):
-            self.__stdin_generator = self.__stdin_source
-        elif isinstance(self.__stdin_source, collections.Iterable):
-            self.__stdin_generator = iter(self.__stdin_source)
-        else:
-            raise LogicalError()
-        # Configure stdin <--
+        # Configure the standard I/O file descriptors
+        self.__configure_stdio(stdout)
 
         # Fork the process -->
         fork_lock = threading.Lock()
@@ -698,8 +792,8 @@ class Process:
     def __parse_args(self, args, kwargs):
         """Parses command arguments and options."""
 
-        def check_arg_type(option, value, types):
-            if not isinstance(value, types):
+        def check_arg(option, value, types = tuple(), values = []):
+            if not isinstance(value, types) and value not in values:
                 raise InvalidArgument("Invalid value type for option {0}", option)
 
         self.__command.append(self.__program)
@@ -707,19 +801,25 @@ class Process:
         for option, value in kwargs.iteritems():
             if option.startswith("_"):
                 if option == "_iter_delimiter":
-                    check_arg_type(option, value, basestring)
+                    check_arg(option, value, basestring)
                     if isinstance(value, unicode):
                         value = psys.b(value)
                     self.__iter_delimiter = value
                 elif option == "_iter_raw":
-                    check_arg_type(option, value, bool)
+                    check_arg(option, value, bool)
                     self.__iter_raw = value
                 elif option == "_ok_statuses":
                     self.__ok_statuses = [ int(status) for status in value ]
+                elif option == "_stderr":
+                    check_arg(option, value, types = File, values = ( STDOUT, STDERR ))
+                    self.__stderr_target = value
                 elif option == "_stdin":
-                    check_arg_type(option, value,
-                        ( str, unicode, collections.Iterator, collections.Iterable ))
+                    check_arg(option, value,
+                        ( str, unicode, File, collections.Iterator, collections.Iterable ))
                     self.__stdin_source = value
+                elif option == "_stdout":
+                    check_arg(option, value, types = File, values = ( STDOUT, STDERR ))
+                    self.__stdout_target = value
                 else:
                     raise InvalidArgument("Invalid option: {0}", option)
             elif len(option) == 1:
@@ -737,7 +837,13 @@ class Process:
     def __piped_from_process(self):
         """Returns True if this process is piped from another process."""
 
-        return self.__stdin_source is not None and isinstance(self.__stdin_source, Process)
+        return isinstance(self.__stdin_source, Process)
+
+
+    def __piped_to_process(self):
+        """Returns True if this process is piped to another process."""
+
+        return isinstance(self.__stdout_target, Process)
 
 
     def __wait_pid_thread(self, fork_lock, termination_fd):

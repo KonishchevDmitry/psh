@@ -41,7 +41,15 @@ class Sh(object):
     """An object that allows to run commands in the shell-style way."""
 
     def __getattribute__(self, attr):
+        """Creates a Program instance."""
+
         return Program(attr)
+
+
+    def __call__(self, program):
+        """Creates a Program instance."""
+
+        return Program(program)
 
 
 class Program:
@@ -53,6 +61,8 @@ class Program:
 
 
     def __call__(self, *args, **kwargs):
+        """Creates a Process instance from Program instance."""
+
         return psh.process.Process(self.__program, *args, **kwargs)
 
 

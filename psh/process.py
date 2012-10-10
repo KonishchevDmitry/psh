@@ -8,6 +8,7 @@ import errno
 import fcntl
 import logging
 import os
+import re
 import signal
 import sys
 import threading
@@ -76,6 +77,13 @@ class Process:
 
     __stderr_target = PIPE
     """The process' stderr target (another process, stdout, etc.)."""
+
+
+    __shell = False
+    """
+    If True, accept Process objects as command arguments by translating them
+    into a shell script.
+    """
 
 
     __iter_raw = False
@@ -224,6 +232,7 @@ class Process:
         return self.__command[:]
 
 
+    # TODO: __str__, __unicode__
     def command_string(self):
         """Returns command string as it will be executed."""
 
@@ -260,13 +269,13 @@ class Process:
         return command
 
 
-    def execute(self, wait = True):
+    def execute(self, check_status = True, wait = True):
         """Executes the command."""
 
         self._execute()
 
         if wait:
-            self.wait(check_status = True)
+            self.wait(check_status = check_status)
 
         return self
 
@@ -315,6 +324,31 @@ class Process:
 
         self.__ensure_terminated()
         return self.__stdout.getvalue()
+
+
+    def shell_command(self):
+        """Generates a shell script that executes the command."""
+
+        command = cStringIO.StringIO()
+
+        pipe_ok_statuses = []
+        self._shell_command(command, pipe_ok_statuses)
+
+        if len(pipe_ok_statuses) == 1:
+            return command.getvalue()
+
+        command.write("; statuses=(${PIPESTATUS[@]});")
+
+        for process_id, ok_statuses in enumerate(pipe_ok_statuses):
+            if process_id == len(pipe_ok_statuses) - 1:
+                command.write(" exit ${{statuses[{0}]}};".format(process_id))
+            else:
+                command.write(" case ${{statuses[{0}]}} in".format(process_id))
+                if ok_statuses:
+                    command.write(" {0});;".format("|".join(str(status) for status in ok_statuses)))
+                command.write(" *) exit 128;; esac;".format(process_id))
+
+        return b"bash -c '" + command.getvalue().replace(b"'", """'"'"'""") + b"'"
 
 
     def status(self):
@@ -411,6 +445,79 @@ class Process:
 
             LOG.debug("Creating a pipe: %s | %s", process.command_string(), self.command_string())
             self.__stdin_source = process
+
+
+    def _shell_command(self, stream, pipe_ok_statuses):
+        """Generates a shell script to run this command."""
+
+        simple_arg_re = re.compile(b"^[-a-zA-Z0-9/_.:=+]+$")
+
+        def write_arg(stream, arg):
+            arg = psys.b(arg)
+
+            if simple_arg_re.search(arg) is None:
+                stream.write(b"'" + arg.replace(b"'", """'"'"'""") + b"'")
+            else:
+                stream.write(arg)
+
+        stdin_source = self.__stdin_source
+
+        # Recursively generate a command line for all processes in the pipe
+        # (we can't use lock here to prevent deadlocking)
+        if isinstance(stdin_source, Process):
+            stdin_source._shell_command(stream, pipe_ok_statuses)
+            stream.write(" | ")
+
+        with self.__lock:
+            # Just in case. Actually, at this time we don't need to lock and
+            # check state here - it's enough to copy all objects to local
+            # variables, but in the future it may be necessary to create a
+            # consistent command line.
+            if self.__state != _PROCESS_STATE_PENDING:
+                raise InvalidProcessState(
+                    "The command can't be serialized to a shell script after it's execution")
+
+            # Command arguments
+            for arg_id, arg in enumerate(self.__command):
+                if arg_id:
+                    stream.write(" ")
+                write_arg(stream, arg)
+
+            # Stdin redirection
+            if isinstance(stdin_source, File):
+                stream.write(" < ")
+                write_arg(stream, stdin_source.path)
+            elif stdin_source is None or isinstance(stdin_source, Process):
+                pass
+            elif isinstance(stdin_source, ( basestring, collections.Iterator, collections.Iterable )):
+                raise InvalidOperation(
+                    "String and iterator input is not supported for serialization to a shell script")
+            else:
+                raise LogicalError()
+
+            # Stdout redirection
+            if self.__piped_to_process() or self.__stdout_target in ( STDOUT, PIPE ):
+                pass
+            elif self.__stdout_target is STDERR:
+                stream.write(" >&2")
+            elif isinstance(self.__stdout_target, File):
+                stream.write(" > ")
+                write_arg(stream, self.__stdout_target.path)
+            else:
+                raise LogicalError()
+
+            # Stderr redirection
+            if self.__stderr_target in ( STDERR, PIPE ):
+                pass
+            elif self.__stderr_target is STDOUT:
+                stream.write(" 2>&1")
+            elif isinstance(self.__stderr_target, File):
+                stream.write(" 2> ")
+                write_arg(stream, self.__stderr_target.path)
+            else:
+                raise LogicalError()
+
+            pipe_ok_statuses.append(self.__ok_statuses[:])
 
 
     def _state(self):
@@ -714,7 +821,7 @@ class Process:
         """Ensures that the process is terminated."""
 
         if self.__state != _PROCESS_STATE_TERMINATED:
-            raise InvalidProcessState("Process is not terminated")
+            raise InvalidProcessState("The process is not terminated")
 
 
     def __execute(self, stdout):
@@ -804,7 +911,12 @@ class Process:
             if not isinstance(value, types) and value not in values:
                 raise InvalidArgument("Invalid value type for option {0}", option)
 
+            return value
+
         self.__command.append(self.__program)
+
+        if "_shell" in kwargs:
+            self.__shell = check_arg("_shell", kwargs["_shell"], bool)
 
         for option, value in kwargs.iteritems():
             if option.startswith("_"):
@@ -814,32 +926,32 @@ class Process:
                         value = psys.b(value)
                     self.__iter_delimiter = value
                 elif option == "_iter_raw":
-                    check_arg(option, value, bool)
-                    self.__iter_raw = value
+                    self.__iter_raw = check_arg(option, value, bool)
                 elif option == "_ok_statuses":
                     self.__ok_statuses = [ int(status) for status in value ]
+                elif option == "_shell":
+                    pass
                 elif option == "_stderr":
-                    check_arg(option, value, types = File, values = ( STDOUT, STDERR ))
-                    self.__stderr_target = value
+                    self.__stderr_target = check_arg(
+                        option, value, types = File, values = ( STDOUT, STDERR ))
                 elif option == "_stdin":
-                    check_arg(option, value,
+                    self.__stdin_source = check_arg(option, value,
                         ( str, unicode, File, collections.Iterator, collections.Iterable ))
-                    self.__stdin_source = value
                 elif option == "_stdout":
-                    check_arg(option, value, types = File, values = ( STDOUT, STDERR ))
-                    self.__stdout_target = value
+                    self.__stdout_target = check_arg(
+                        option, value, types = File, values = ( STDOUT, STDERR ))
                 else:
                     raise InvalidArgument("Invalid option: {0}", option)
             elif len(option) == 1:
                 self.__command.append("-" + option)
                 if value is not None:
-                    self.__command.append(_get_arg_value(value))
+                    self.__command.append(_get_arg_value(value, self.__shell))
             else:
                 self.__command.append("--" + option.replace("_", "-"))
                 if value is not None:
-                    self.__command.append(_get_arg_value(value))
+                    self.__command.append(_get_arg_value(value, self.__shell))
 
-        self.__command += [ _get_arg_value(arg) for arg in args ]
+        self.__command += [ _get_arg_value(arg, self.__shell) for arg in args ]
 
 
     def __piped_from_process(self):
@@ -894,12 +1006,14 @@ class Process:
 
 
 
-def _get_arg_value(value):
+def _get_arg_value(value, shell):
     """Returns an argument string value."""
 
     if type(value) in ( str, unicode ):
         return value
     elif type(value) in ( int, long, float ):
         return unicode(value)
+    elif shell and isinstance(value, Process):
+        return value.shell_command()
     else:
         raise InvalidArgument("Invalid argument: command arguments must be basic types only")

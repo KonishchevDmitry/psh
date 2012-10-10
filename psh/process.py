@@ -204,10 +204,18 @@ class Process:
             if self.__stdout_target is not PIPE:
                 raise InvalidOperation("The process' stdout is already redirected")
 
-            process._pipe_process(self)
+            orig_stdout_target = self.__stdout_target
             self.__stdout_target = process
 
-            return process
+        try:
+            # Must be outside the lock to prevent deadlocking
+            process._pipe_process(self)
+        except:
+            with self.__lock:
+                self.__stdout_target = orig_stdout_target
+            raise
+
+        return process
 
 
     def command(self):

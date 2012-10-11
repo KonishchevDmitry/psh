@@ -21,11 +21,13 @@ def test_command_arguments(test):
 
     process = sh.test()
     assert process.command() == [ "test" ]
-    assert process.command_string() == "test"
+    assert unicode(process) == "test"
+    assert str(process) == unicode(process).encode("utf-8")
 
     process = sh("complex command name")("arg1", "arg2")
     assert process.command() == [ "complex command name", "arg1", "arg2" ]
-    assert process.command_string() == "'complex command name' arg1 arg2"
+    assert unicode(process) == "'complex command name' arg1 arg2"
+    assert str(process) == unicode(process).encode("utf-8")
 
     process = sh.test(
         b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', b"тест", b"тест тест",
@@ -37,23 +39,27 @@ def test_command_arguments(test):
         "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
         "3", "340282366920938463463374607431768211456", "2.0"
     ]
-    assert process.command_string() == ("test "
+    assert unicode(process) == ("test "
         r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' "quote'arg" 'quote"arg' \xd1\x82\xd0\xb5\xd1\x81\xd1\x82 '\xd1\x82\xd0\xb5\xd1\x81\xd1\x82 \xd1\x82\xd0\xb5\xd1\x81\xd1\x82' """
         r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' 'quote\'arg' 'quote"arg' тест 'тест тест' """
         "3 340282366920938463463374607431768211456 2.0"
     )
+    assert str(process) == unicode(process).encode("utf-8")
 
     process = sh.test("space arg", s = "short_arg")
     assert process.command() == [ "test", "-s", "short_arg", "space arg" ]
-    assert process.command_string() == "test -s short_arg 'space arg'"
+    assert unicode(process) == "test -s short_arg 'space arg'"
+    assert str(process) == unicode(process).encode("utf-8")
 
     process = sh.test("arg", long_long_arg = "long arg")
     assert process.command() == [ "test", "--long-long-arg", "long arg", "arg" ]
-    assert process.command_string() == "test --long-long-arg 'long arg' arg"
+    assert unicode(process) == "test --long-long-arg 'long arg' arg"
+    assert str(process) == unicode(process).encode("utf-8")
 
     process = sh.test("arg", none_arg = None)
     assert process.command() == [ "test", "--none-arg", "arg" ]
-    assert process.command_string() == "test --none-arg arg"
+    assert unicode(process) == "test --none-arg arg"
+    assert str(process) == unicode(process).encode("utf-8")
 
 
 def test_invalid_command_arguments(test):

@@ -226,15 +226,20 @@ class Process:
         return process
 
 
-    def command(self):
-        """Returns command arguments as it will be executed."""
+    def __str__(self):
+        """Returns the command string.
 
-        return self.__command[:]
+        Note: very lazy formatting.
+        """
+
+        return psys.b(self.__unicode__())
 
 
-    # TODO: __str__, __unicode__
-    def command_string(self):
-        """Returns command string as it will be executed."""
+    def __unicode__(self):
+        """Returns the command string.
+
+        Note: very lazy formatting.
+        """
 
         command = ""
 
@@ -243,13 +248,14 @@ class Process:
                 command += " "
 
             if type(arg) == str:
-                value = repr(arg)
                 for c in b""" '"\\\r\n\t""":
                     if c in arg:
+                        arg = repr(arg)
                         break
                 else:
-                    value = value.strip("'")
-                command += value
+                    arg = repr(arg)[1:-1]
+
+                command += psys.u(arg)
             else:
                 for c in b""" '"\\\r\n\t""":
                     if c in arg:
@@ -264,9 +270,16 @@ class Process:
 
                         arg = "'" + arg + "'"
                         break
+
                 command += arg
 
         return command
+
+
+    def command(self):
+        """Returns command arguments as it will be executed."""
+
+        return self.__command[:]
 
 
     def execute(self, check_status = True, wait = True):
@@ -290,7 +303,7 @@ class Process:
             raise InvalidProcessState("Process is not running")
 
         if self.__state == _PROCESS_STATE_RUNNING:
-            LOG.debug("Send %s signal to %s...", signal, self.command_string())
+            LOG.debug("Send %s signal to %s...", signal, self)
 
             try:
                 os.kill(self.__pid, signal)
@@ -326,31 +339,6 @@ class Process:
         return self.__stdout.getvalue()
 
 
-    def shell_command(self):
-        """Generates a shell script that executes the command."""
-
-        command = cStringIO.StringIO()
-
-        pipe_ok_statuses = []
-        self._shell_command(command, pipe_ok_statuses)
-
-        if len(pipe_ok_statuses) == 1:
-            return command.getvalue()
-
-        command.write("; statuses=(${PIPESTATUS[@]});")
-
-        for process_id, ok_statuses in enumerate(pipe_ok_statuses):
-            if process_id == len(pipe_ok_statuses) - 1:
-                command.write(" exit ${{statuses[{0}]}};".format(process_id))
-            else:
-                command.write(" case ${{statuses[{0}]}} in".format(process_id))
-                if ok_statuses:
-                    command.write(" {0});;".format("|".join(str(status) for status in ok_statuses)))
-                command.write(" *) exit 128;; esac;".format(process_id))
-
-        return b"bash -c '" + command.getvalue().replace(b"'", """'"'"'""") + b"'"
-
-
     def status(self):
         """Returns the process' exit status."""
 
@@ -380,8 +368,8 @@ class Process:
         if self.__state < _PROCESS_STATE_RUNNING:
             raise InvalidProcessState("Process is not running")
 
-        LOG.debug("Waiting for %s termination%s...", self.command_string(),
-            "" if kill is None else " killing it with {0} signal".format(kill))
+        LOG.debug("Waiting for %s termination%s...",
+            self, "" if kill is None else " killing it with {0} signal".format(kill))
 
         if kill is not None:
             while self.kill(kill):
@@ -416,7 +404,7 @@ class Process:
 
             self.__state = _PROCESS_STATE_SPAWNING
 
-        LOG.debug("Executing %s", self.command_string())
+        LOG.debug("Executing %s", self)
 
         try:
             self.__execute(stdout)
@@ -443,12 +431,15 @@ class Process:
             if self.__stdin_source is not None:
                 raise InvalidOperation("The process' stdin is already redirected")
 
-            LOG.debug("Creating a pipe: %s | %s", process.command_string(), self.command_string())
+            LOG.debug("Creating a pipe: %s | %s", process, self)
             self.__stdin_source = process
 
 
     def _shell_command(self, stream, pipe_ok_statuses):
-        """Generates a shell script to run this command."""
+        """
+        Generates a shell command which execution is equal to
+        self.execute().
+        """
 
         simple_arg_re = re.compile(b"^[-a-zA-Z0-9/_.:=+]+$")
 
@@ -518,6 +509,34 @@ class Process:
                 raise LogicalError()
 
             pipe_ok_statuses.append(self.__ok_statuses[:])
+
+
+    def _shell_command_full(self):
+        """
+        Generates a shell command which execution is equal to self.execute()
+        including handling of errors in the middle of the process pipe.
+        """
+
+        command = cStringIO.StringIO()
+
+        pipe_ok_statuses = []
+        self._shell_command(command, pipe_ok_statuses)
+
+        if len(pipe_ok_statuses) == 1:
+            return command.getvalue()
+
+        command.write("; statuses=(${PIPESTATUS[@]});")
+
+        for process_id, ok_statuses in enumerate(pipe_ok_statuses):
+            if process_id == len(pipe_ok_statuses) - 1:
+                command.write(" exit ${{statuses[{0}]}};".format(process_id))
+            else:
+                command.write(" case ${{statuses[{0}]}} in".format(process_id))
+                if ok_statuses:
+                    command.write(" {0});;".format("|".join(str(status) for status in ok_statuses)))
+                command.write(" *) exit 128;; esac;".format(process_id))
+
+        return b"bash -c '" + command.getvalue().replace(b"'", """'"'"'""") + b"'"
 
 
     def _state(self):
@@ -986,15 +1005,13 @@ class Process:
             else:
                 if os.WIFEXITED(status):
                     self.__status = os.WEXITSTATUS(status)
-                    LOG.debug("Command %s terminated with %s status code.",
-                        self.command_string(), self.__status)
+                    LOG.debug("Command %s terminated with %s status code.", self, self.__status)
                 elif os.WIFSIGNALED(status):
                     signum = os.WTERMSIG(status)
-                    LOG.debug("Command %s terminated due to receipt of %s signal.",
-                        self.command_string(), signum)
+                    LOG.debug("Command %s terminated due to receipt of %s signal.", self, signum)
                     self.__status = 128 + signum
                 else:
-                    LOG.error("Command %s terminated due to unknown reason.", self.command_string())
+                    LOG.error("Command %s terminated due to unknown reason.", self)
                     self.__status = 127
         except Exception:
             LOG.exception("PID waiting thread crashed.")
@@ -1014,6 +1031,6 @@ def _get_arg_value(value, shell):
     elif type(value) in ( int, long, float ):
         return unicode(value)
     elif shell and isinstance(value, Process):
-        return value.shell_command()
+        return value._shell_command_full()
     else:
         raise InvalidArgument("Invalid argument: command arguments must be basic types only")

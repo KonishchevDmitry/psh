@@ -21,8 +21,8 @@ def test_execution(test):
     process.stdout() == ""
     process.stderr() == "aaa\n"
 
-    process = sh.sh("-c",
-        sh.sh("-c", "echo aaa >&2", _stderr = STDOUT), _shell = True).execute()
+    process = sh.sh(
+        c = sh.sh("-c", "echo aaa >&2", _stderr = STDOUT), _shell = True).execute()
     process.stdout() == "aaa\n"
     process.stderr() == ""
 
@@ -65,6 +65,9 @@ def test_disabled_shell_mode(test):
 
     with pytest.raises(psh.InvalidArgument):
         sh.test(sh.test())
+
+    with pytest.raises(psh.InvalidArgument):
+        sh.test(option = sh.test())
 
 
 def test_unsupported_operations(test):

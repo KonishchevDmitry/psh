@@ -34,40 +34,58 @@ thread which is not thread-safe.
 
 from __future__ import unicode_literals
 
-import psh.process
+from psh.process import Process
+from psh.process import STDOUT, STDERR, File, DEVNULL
+from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState, ProcessOutputWasTruncated
 
 
 class Sh(object):
-    """An object that allows to run commands in the shell-style way."""
+    """Program object factory."""
+
+    def __init__(self, **kwargs):
+        for option in kwargs:
+            if not option.startswith("_"):
+                raise InvalidArgument("Invalid argument: all options must start with '_'")
+
+        # Default process options
+        self._default_options = kwargs
+
 
     def __getattribute__(self, attr):
         """Creates a Program instance."""
 
-        return Program(attr.replace("_", "-"))
+        return Program(attr.replace("_", "-"),
+            **object.__getattribute__(self, "_default_options"))
 
 
     def __call__(self, program):
         """Creates a Program instance."""
 
-        return Program(program)
+        return Program(program,
+            **object.__getattribute__(self, "_default_options"))
 
 
 class Program:
     """Represents a program."""
 
-    def __init__(self, program):
-        # Program name or full path
-        self.__program = program
+    def __init__(self, program, *args, **kwargs):
+        # Default process arguments
+        self.__args = ( program, ) + args
+
+        # Default process options
+        self.__kwargs = kwargs
 
 
     def __call__(self, *args, **kwargs):
-        """Creates a Process instance from Program instance."""
+        """Creates a Process instance for this program."""
 
-        return psh.process.Process(self.__program, *args, **kwargs)
+        args = self.__args + args
 
+        options = self.__kwargs.copy()
+        options.update(kwargs)
 
-from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState, ProcessOutputWasTruncated
-from psh.process import File, STDOUT, STDERR, DEVNULL
+        return Process(*args, **options)
+
 
 sh = Sh()
 """Program object factory."""

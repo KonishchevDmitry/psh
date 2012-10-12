@@ -31,6 +31,7 @@ from psh._process.pipe import Pipe
 LOG = logging.getLogger(__name__)
 
 
+# TODO STDIN
 class PIPE: pass
 """A value to configure redirection of stdout/stderr to a pipe."""
 
@@ -97,6 +98,12 @@ class Process:
     __truncate_output = False
     """See _truncate_output description."""
 
+
+    __defer = True
+    """
+    If False, the process will be executed automatically in the Process
+    constructor.
+    """
 
     __shell = False
     """
@@ -174,6 +181,10 @@ class Process:
 
         # Parse the command arguments
         self.__parse_args(args, kwargs)
+
+        # Execute the process if it is not deferred
+        if not self.__defer:
+            self.execute()
 
 
     def __enter__(self):
@@ -981,7 +992,10 @@ class Process:
             if not option.startswith("_"):
                 continue
 
-            if option == "_env":
+            if option == "_defer":
+                check_arg(option, value, bool)
+                self.__defer = value
+            elif option == "_env":
                 if value is None:
                     self.__env = value
                 else:

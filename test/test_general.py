@@ -180,9 +180,40 @@ def test_ok_statuses(test):
 
 
 
+def test_defer(test):
+    """Tests _defer option."""
+
+    with pytest.raises(psh.InvalidProcessState):
+        sh.true().status()
+
+    assert sh.true(_defer = False).status() == 0
+
+
+
 def test_environment(test):
     """Tests overriding process environment variables."""
 
     assert sh.env().execute().stdout() != ""
     assert sh.env(_env = {}).execute().stdout() == ""
     assert sh.env(_env = { "psh_environ_test": "тест" }).execute().stdout() == "psh_environ_test=тест\n"
+
+
+
+def test_program_customization(test):
+    """Tests customization of a Program instance."""
+
+    with pytest.raises(psh.InvalidProcessState):
+        sh.true().status()
+
+    true = psh.Program("true", _defer = False)
+    assert true().status() == 0
+
+
+def test_sh_customization(test):
+    """Tests customization of a Sh instance."""
+
+    with pytest.raises(psh.InvalidProcessState):
+        sh.true().status()
+
+    csh = psh.Sh(_defer = False)
+    assert csh.true().status() == 0

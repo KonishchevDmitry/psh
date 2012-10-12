@@ -14,6 +14,22 @@ import test
 test.init(globals())
 
 
+def test_disabling_stdin_redirection(test, capfd):
+    """Tests disabling stdin redirection."""
+
+    process = sh.python("-c",
+        '__import__("psh").sh.cat(_stdout = __import__("psh").STDOUT, _defer = False)',
+        _defer = False, _stdin = "aaa\nbbb\nccc\n")
+    assert process.stdout() == ""
+    assert process.stderr() == ""
+
+    process = sh.python("-c",
+        '__import__("psh").sh.grep("bbb", _stdin = __import__("psh").STDIN, _stdout = __import__("psh").STDOUT, _defer = False)',
+        _defer = False, _stdin = "aaa\nbbb\nccc\n")
+    assert process.stdout() == "bbb\n"
+    assert process.stderr() == ""
+
+
 def test_stdin_from_file(test, capfd):
     """Tests redirecting a file to stdin."""
 

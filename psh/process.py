@@ -31,9 +31,11 @@ from psh._process.pipe import Pipe
 LOG = logging.getLogger(__name__)
 
 
-# TODO STDIN
 class PIPE: pass
 """A value to configure redirection of stdout/stderr to a pipe."""
+
+class STDIN: pass
+"""A value to disable stdin redirection."""
 
 class STDOUT: pass
 """A value to configure redirection of stdout/stderr to stdout."""
@@ -461,7 +463,7 @@ class Process:
             if self.__state != _PROCESS_STATE_PENDING:
                 raise InvalidProcessState("Process can't be piped after execution")
 
-            if self.__stdin_source is not None:
+            if self.__stdin_source not in ( None, STDIN ):
                 raise InvalidOperation("The process' stdin is already redirected")
 
             LOG.debug("Creating a pipe: %s | %s", process, self)
@@ -511,7 +513,7 @@ class Process:
             if isinstance(stdin_source, File):
                 stream.write(" < ")
                 write_arg(stream, stdin_source.path)
-            elif stdin_source is None or isinstance(stdin_source, Process):
+            elif stdin_source in ( None, STDIN ) or isinstance(stdin_source, Process):
                 pass
             elif isinstance(stdin_source, ( basestring, collections.Iterator, collections.Iterable )):
                 raise InvalidOperation(
@@ -847,7 +849,10 @@ class Process:
         # stdin -->
         if self.__stdin_source is None:
             self.__stdin_source = DEVNULL
-        elif isinstance(self.__stdin_source, File):
+        elif (
+            self.__stdin_source is STDIN or
+            isinstance(self.__stdin_source, File)
+        ):
             pass
         elif self.__piped_from_process():
             # Connect and execute all processes in the pipe
@@ -982,7 +987,7 @@ class Process:
         """Parses command arguments and options."""
 
         # Process options -->
-        def check_arg(option, value, types = tuple(), values = []):
+        def check_arg(option, value, types = tuple(), values = tuple()):
             if not isinstance(value, types) and value not in values:
                 raise InvalidArgument("Invalid value for option {0}", option)
 
@@ -1018,7 +1023,8 @@ class Process:
                     option, value, types = File, values = ( STDOUT, STDERR ))
             elif option == "_stdin":
                 self.__stdin_source = check_arg(option, value,
-                    ( str, unicode, File, collections.Iterator, collections.Iterable ))
+                    types = ( str, unicode, File, collections.Iterator, collections.Iterable ),
+                    values = ( STDIN, ))
             elif option == "_stdout":
                 self.__stdout_target = check_arg(
                     option, value, types = File, values = ( STDOUT, STDERR ))

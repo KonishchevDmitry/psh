@@ -35,7 +35,7 @@ thread which is not thread-safe.
 from __future__ import unicode_literals
 
 from psh.process import Process
-from psh.process import STDOUT, STDERR, File, DEVNULL
+from psh.process import STDIN, STDOUT, STDERR, File, DEVNULL
 from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState, ProcessOutputWasTruncated
 
 

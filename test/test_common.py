@@ -24,6 +24,11 @@ def test_command_arguments(test):
     assert unicode(process) == "test"
     assert str(process) == unicode(process).encode("utf-8")
 
+    process = sh.complex_command_name()
+    assert process.command() == [ "complex-command-name" ]
+    assert unicode(process) == "complex-command-name"
+    assert str(process) == unicode(process).encode("utf-8")
+
     process = sh("complex command name")("arg1", "arg2")
     assert process.command() == [ "complex command name", "arg1", "arg2" ]
     assert unicode(process) == "'complex command name' arg1 arg2"

@@ -43,7 +43,7 @@ class Sh(object):
     def __getattribute__(self, attr):
         """Creates a Program instance."""
 
-        return Program(attr)
+        return Program(attr.replace("_", "-"))
 
 
     def __call__(self, program):

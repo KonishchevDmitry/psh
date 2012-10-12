@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Tests common operations."""
+"""Tests general operations."""
 
 from __future__ import unicode_literals
 
@@ -177,3 +177,12 @@ def test_ok_statuses(test):
     assert sh.false(_ok_statuses = [ 0, 1 ] ).execute().status() == 1
     assert pytest.raises(psh.ExecutionError,
         lambda: sh.true(_ok_statuses = []).execute()).value.status() == 0
+
+
+
+def test_environment(test):
+    """Tests overriding process environment variables."""
+
+    assert sh.env().execute().stdout() != ""
+    assert sh.env(_env = {}).execute().stdout() == ""
+    assert sh.env(_env = { "psh_environ_test": "тест" }).execute().stdout() == "psh_environ_test=тест\n"

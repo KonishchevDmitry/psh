@@ -104,6 +104,9 @@ class Process:
     into a shell script.
     """
 
+    __env = None
+    """The process' environment."""
+
 
     __iter_raw = False
     """
@@ -634,7 +637,11 @@ class Process:
                         append = self.__stderr_target.append)
 
                 exec_error = True
-                os.execvp(self.__program, self.__command)
+
+                if self.__env is None:
+                    os.execvp(self.__program, self.__command)
+                else:
+                    os.execvpe(self.__program, self.__command, self.__env)
             except Exception as e:
                 if exec_error and isinstance(e, EnvironmentError) and e.errno == errno.EACCES:
                     exit_code = 126
@@ -966,38 +973,47 @@ class Process:
         # Process options -->
         def check_arg(option, value, types = tuple(), values = []):
             if not isinstance(value, types) and value not in values:
-                raise InvalidArgument("Invalid value type for option {0}", option)
+                raise InvalidArgument("Invalid value for option {0}", option)
 
             return value
 
         for option, value in kwargs.iteritems():
-            if option.startswith("_"):
-                if option == "_iter_delimiter":
-                    check_arg(option, value, basestring)
-                    if isinstance(value, unicode):
-                        value = psys.b(value)
-                    self.__iter_delimiter = value
-                elif option == "_iter_raw":
-                    self.__iter_raw = check_arg(option, value, bool)
-                elif option == "_ok_statuses":
-                    self.__ok_statuses = [ check_arg(option, status, int) for status in value ]
-                elif option == "_shell":
-                    self.__shell = check_arg(option, value, bool)
-                elif option == "_stderr":
-                    self.__stderr_target = check_arg(
-                        option, value, types = File, values = ( STDOUT, STDERR ))
-                elif option == "_stdin":
-                    self.__stdin_source = check_arg(option, value,
-                        ( str, unicode, File, collections.Iterator, collections.Iterable ))
-                elif option == "_stdout":
-                    self.__stdout_target = check_arg(
-                        option, value, types = File, values = ( STDOUT, STDERR ))
-                elif option == "_truncate_output":
-                    self.__truncate_output = check_arg(option, value, bool)
-                elif option == "_wait_for_output":
-                    self.__wait_for_output = check_arg(option, value, bool)
+            if not option.startswith("_"):
+                continue
+
+            if option == "_env":
+                if value is None:
+                    self.__env = value
                 else:
-                    raise InvalidArgument("Invalid option: {0}", option)
+                    self.__env = dict(
+                        ( psys.b(check_arg(option, k, basestring)), psys.b(check_arg(option, v, basestring)) )
+                            for k, v in value.iteritems() )
+            elif option == "_iter_delimiter":
+                check_arg(option, value, basestring)
+                if isinstance(value, unicode):
+                    value = psys.b(value)
+                self.__iter_delimiter = value
+            elif option == "_iter_raw":
+                self.__iter_raw = check_arg(option, value, bool)
+            elif option == "_ok_statuses":
+                self.__ok_statuses = [ check_arg(option, status, int) for status in value ]
+            elif option == "_shell":
+                self.__shell = check_arg(option, value, bool)
+            elif option == "_stderr":
+                self.__stderr_target = check_arg(
+                    option, value, types = File, values = ( STDOUT, STDERR ))
+            elif option == "_stdin":
+                self.__stdin_source = check_arg(option, value,
+                    ( str, unicode, File, collections.Iterator, collections.Iterable ))
+            elif option == "_stdout":
+                self.__stdout_target = check_arg(
+                    option, value, types = File, values = ( STDOUT, STDERR ))
+            elif option == "_truncate_output":
+                self.__truncate_output = check_arg(option, value, bool)
+            elif option == "_wait_for_output":
+                self.__wait_for_output = check_arg(option, value, bool)
+            else:
+                raise InvalidArgument("Invalid option: {0}", option)
         # Process options <--
 
         # Command arguments -->

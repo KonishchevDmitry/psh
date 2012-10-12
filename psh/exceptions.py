@@ -16,8 +16,10 @@ class Error(Exception):
 class ExecutionError(Error):
     """Raised when a command failed to execute."""
 
-    def __init__(self, status, stdout, stderr):
-        super(ExecutionError, self).__init__("Program terminated with an error status")
+    def __init__(self, status, stdout, stderr,
+        error = "Program terminated with an error status"):
+
+        super(ExecutionError, self).__init__(error)
         self.__status = status
         self.__stdout = stdout
         self.__stderr = stderr
@@ -82,3 +84,14 @@ class LogicalError(Error):
 
     def __init__(self, *args, **kwargs):
         super(Error, self).__init__("Logical error")
+
+
+class ProcessOutputWasTruncated(ExecutionError):
+    """
+    Raised when process terminates and its output is truncated because one of
+    its children didn't close the output descriptor.
+    """
+
+    def __init__(self, status, stdout, stderr):
+        super(ProcessOutputWasTruncated, self).__init__(
+            status, stdout, stderr, error = "The process' output was truncated")

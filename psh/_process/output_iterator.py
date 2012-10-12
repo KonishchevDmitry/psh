@@ -17,7 +17,6 @@ from psh._process.pipe import Pipe
 LOG = logging.getLogger(__name__)
 
 
-# TODO: read all or not
 class OutputIterator:
     """Process output iterator."""
 

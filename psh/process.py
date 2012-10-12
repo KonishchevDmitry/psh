@@ -24,6 +24,7 @@ from psh.exceptions import ExecutionError
 from psh.exceptions import InvalidArgument
 from psh.exceptions import InvalidOperation
 from psh.exceptions import InvalidProcessState
+from psh.exceptions import ProcessOutputWasTruncated
 from psh._process.output_iterator import OutputIterator
 from psh._process.pipe import Pipe
 
@@ -64,7 +65,18 @@ _PROCESS_STATE_TERMINATED = 3
 
 
 class Process:
-    """Represents a process."""
+    # TODO: argument docs
+    """Represents a process.
+
+    _wait_for_output (default is True) -- if _stdout = PIPE or _stderr = PIPE
+    and _wait_for_output is True, wait() returns only when EOF will be gotten
+    on this pipes. Attention: output iterators always read all data from
+    stdout.
+
+    _truncate_output (default if False) -- if _wait_for_output is False and
+    _truncate_output is True, no exception raised by wait() when there is data
+    in stdout or stderr.
+    """
 
     __stdin_source = None
     """The process' stdin source (another process, string, etc.)."""
@@ -77,6 +89,13 @@ class Process:
 
     __stderr_target = PIPE
     """The process' stderr target (another process, stdout, etc.)."""
+
+
+    __wait_for_output = True
+    """See _wait_for_output description."""
+
+    __truncate_output = False
+    """See _truncate_output description."""
 
 
     __shell = False
@@ -649,9 +668,11 @@ class Process:
         """Communicates with the process and waits for its termination."""
 
         pipe_map = {}
+        poll_objects = 0
 
         # Configure the poll object and pipes -->
         poll.register(self.__termination_fd, poll.POLLIN)
+        poll_objects += 1
 
         for pipe in self.__pipes:
             fd = pipe.read if pipe.output else pipe.write
@@ -665,21 +686,25 @@ class Process:
 
             poll.register(fd, poll.POLLIN if pipe.output else poll.POLLOUT)
             pipe.close(read = not pipe.output, write = pipe.output)
+            poll_objects += 1
         # Configure the poll object and pipes <--
 
-
-        # Communicate with the process until it terminates...
-
+        # Communicate with the process -->
         stdin = None
-        terminated = False
 
-        while not terminated:
-            # TODO: read all
-            for fd, flags in poll.poll():
+        while poll_objects:
+            events = poll.poll()
+
+            for fd, flags in events:
                 # Process termination
                 if fd == self.__termination_fd:
-                    terminated = True
-                    break
+                    if self.__wait_for_output:
+                        poll.unregister(self.__termination_fd)
+                        poll_objects -= 1
+                        continue
+                    else:
+                        poll_objects = 0
+                        break
 
                 pipe = pipe_map[fd]
 
@@ -704,6 +729,7 @@ class Process:
 
                     if stdin is None:
                         poll.unregister(fd)
+                        poll_objects -= 1
                         pipe.close()
                     else:
                         try:
@@ -712,6 +738,7 @@ class Process:
                             # The process closed its stdin
                             if e.errno == errno.EPIPE:
                                 poll.unregister(fd)
+                                poll_objects -= 1
                                 pipe.close()
                             else:
                                 raise e
@@ -728,40 +755,47 @@ class Process:
                         self.__on_output(pipe.source, data)
                     else:
                         poll.unregister(fd)
+                        poll_objects -= 1
                 else:
                     raise LogicalError()
+        # Communicate with the process <--
 
+        if not self.__wait_for_output:
+            # The process has terminated, but we should continue communication
+            # to get output that we haven't got from it yet. But we must do it
+            # wisely, because the process might fork() itself, so we'll read
+            # its child's output forever.
 
-        # The process has terminated, but we should continue communication to
-        # get output that we haven't got from it yet. But we must do it
-        # wisely, because the process might fork() itself so we'll read its
-        # child's output forever.
+            # Maximum output size after process termination (bigger than any
+            # pipe buffer size).
+            max_data_size = 1024 * 1024
 
-        # Maximum output size after process termination
-        max_data_size = 1024 * 1024
+            for pipe in self.__pipes:
+                if (
+                    pipe.source in ( psys.STDOUT_FILENO, psys.STDERR_FILENO ) and
+                    pipe.read is not None
+                ):
+                    size = 0
 
-        for pipe in self.__pipes:
-            if (
-                pipe.source in ( psys.STDOUT_FILENO, psys.STDERR_FILENO ) and
-                pipe.read is not None
-            ):
-                size = 0
+                    while size < max_data_size:
+                        try:
+                            data = eintr_retry(os.read)(
+                                pipe.read, min(psys.BUFSIZE, max_data_size - size))
+                        except EnvironmentError as e:
+                            if e.errno != errno.EAGAIN:
+                                raise e
 
-                while size < max_data_size:
-                    try:
-                        data = eintr_retry(os.read)(
-                            pipe.read, min(psys.BUFSIZE, max_data_size - size))
-                    except EnvironmentError as e:
-                        if e.errno == errno.EAGAIN:
+                            if not self.__truncate_output:
+                                self.__error = ProcessOutputWasTruncated(
+                                    self.__status, self.__stdout.getvalue(), self.__stderr.getvalue())
+
                             break
                         else:
-                            raise e
-                    else:
-                        if data:
-                            size += len(data)
-                            self.__on_output(pipe.source, data)
-                        else:
-                            break
+                            if data:
+                                size += len(data)
+                                self.__on_output(pipe.source, data)
+                            else:
+                                break
 
 
     def __communication_thread_func(self, fork_lock, poll):
@@ -780,8 +814,11 @@ class Process:
                     self.__close()
 
                 self.__state = _PROCESS_STATE_TERMINATED
-        except Exception:
+        except Exception as e:
             LOG.exception("Execution thread crashed.")
+
+            if self.__pid is not None:
+                self.__error = e
         finally:
             poll.close()
 
@@ -926,16 +963,12 @@ class Process:
     def __parse_args(self, args, kwargs):
         """Parses command arguments and options."""
 
+        # Process options -->
         def check_arg(option, value, types = tuple(), values = []):
             if not isinstance(value, types) and value not in values:
                 raise InvalidArgument("Invalid value type for option {0}", option)
 
             return value
-
-        self.__command.append(self.__program)
-
-        if "_shell" in kwargs:
-            self.__shell = check_arg("_shell", kwargs["_shell"], bool)
 
         for option, value in kwargs.iteritems():
             if option.startswith("_"):
@@ -947,9 +980,9 @@ class Process:
                 elif option == "_iter_raw":
                     self.__iter_raw = check_arg(option, value, bool)
                 elif option == "_ok_statuses":
-                    self.__ok_statuses = [ int(status) for status in value ]
+                    self.__ok_statuses = [ check_arg(option, status, int) for status in value ]
                 elif option == "_shell":
-                    pass
+                    self.__shell = check_arg(option, value, bool)
                 elif option == "_stderr":
                     self.__stderr_target = check_arg(
                         option, value, types = File, values = ( STDOUT, STDERR ))
@@ -959,8 +992,20 @@ class Process:
                 elif option == "_stdout":
                     self.__stdout_target = check_arg(
                         option, value, types = File, values = ( STDOUT, STDERR ))
+                elif option == "_truncate_output":
+                    self.__truncate_output = check_arg(option, value, bool)
+                elif option == "_wait_for_output":
+                    self.__wait_for_output = check_arg(option, value, bool)
                 else:
                     raise InvalidArgument("Invalid option: {0}", option)
+        # Process options <--
+
+        # Command arguments -->
+        self.__command.append(self.__program)
+
+        for option, value in kwargs.iteritems():
+            if option.startswith("_"):
+                pass
             elif len(option) == 1:
                 self.__command.append("-" + option)
                 if value is not None:
@@ -971,6 +1016,7 @@ class Process:
                     self.__command.append(_get_arg_value(value, self.__shell))
 
         self.__command += [ _get_arg_value(arg, self.__shell) for arg in args ]
+        # Command arguments <--
 
 
     def __piped_from_process(self):

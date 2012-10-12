@@ -66,7 +66,8 @@ class Program:
         return psh.process.Process(self.__program, *args, **kwargs)
 
 
-from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState
+from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState, ProcessOutputWasTruncated
 from psh.process import File, STDOUT, STDERR, DEVNULL
 
 sh = Sh()
+"""Program object factory."""

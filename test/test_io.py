@@ -107,6 +107,28 @@ def test_large_output(test):
             stderr_tempfile.close()
 
 
+def test_output_after_process_termination(test):
+    """Tests execution of a process that terminates before its children."""
+
+    command = [ "-c", "echo aaa; ( sleep 1; echo bbb; )&" ]
+
+    process = sh.sh(*command).execute()
+    assert process.status() == 0
+    assert process.stdout() == "aaa\nbbb\n"
+    assert process.stderr() == ""
+
+    error = pytest.raises(psh.ProcessOutputWasTruncated,
+        lambda: sh.sh(*command, _wait_for_output = False).execute()).value
+    assert error.status() == 0
+    assert error.stdout() == "aaa\n"
+    assert error.stderr() == ""
+
+    process = sh.sh(*command, _wait_for_output = False, _truncate_output = True).execute()
+    assert process.status() == 0
+    assert process.stdout() == "aaa\n"
+    assert process.stderr() == ""
+
+
 def _check_output(obj, valid_stdout, valid_stderr):
     """Checks a program output."""
 

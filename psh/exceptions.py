@@ -19,6 +19,7 @@ class ExecutionError(Error):
     def __init__(self, status, stdout, stderr,
         error = "Program terminated with an error status"):
 
+        # TODO process
         super(ExecutionError, self).__init__(error)
         self.__status = status
         self.__stdout = stdout

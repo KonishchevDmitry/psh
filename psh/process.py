@@ -71,6 +71,33 @@ class Process:
     # TODO: argument docs
     """Represents a process.
 
+    Process object doesn't hold any resources (file descriptors, etc.) until
+    it is executed. If it's created with ``_defer`` option (see
+    :ref:`command-execution`) or executed with execute(wait = True), all its
+    resources will be freed and the process will be waited when Process with
+    _defer option will be created or execute() returns.  But if you execute a
+    command in other way (by execute(wait = False) or issuing iteration over
+    its output) you should use ``with`` context manager to guarantee that the
+    process will be terminated and all its resources will be freed when the
+    code leaves the current scope but not when Python's garbage collector
+    decide to collect Process and Process' iterator objects. You aren't ought
+    to do so, but its very good to do so to be sure in your program's
+    behaviour.
+
+    You can use 'with' statement on Process objects to guarantee that the
+    process will be wait()'ed when you leave the 'with' context (which is also
+    frees all opened file descriptors and other resources).
+
+    If you iterate over process output (see TODO), you should do it within
+    'with' context to guarantee that all opened file descriptors will be
+    closed as soon as you end iteration or leave the 'with' context. Otherwise
+    they will be closed only when Python's garbage collector consider to
+    destroy the output iterator.
+
+    When code leaves a 'with' context associated with a Process instance, all
+    its output iterators became closed.
+
+
     _wait_for_output (default is True) -- if _stdout = PIPE or _stderr = PIPE
     and _wait_for_output is True, wait() returns only when EOF will be gotten
     on this pipes. Attention: output iterators always read all data from

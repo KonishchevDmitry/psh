@@ -716,12 +716,15 @@ class Process:
                     redirect_fd(self.__stderr_target.path, psys.STDERR_FILENO,
                         append = self.__stderr_target.append)
 
+                # Required when we have C locale
+                command = [ psys.b(arg) for arg in self.__command ]
+
                 exec_error = True
 
                 if self.__env is None:
-                    os.execvp(self.__program, self.__command)
+                    os.execvp(self.__program, command)
                 else:
-                    os.execvpe(self.__program, self.__command, self.__env)
+                    os.execvpe(self.__program, command, self.__env)
             except Exception as e:
                 if exec_error and isinstance(e, EnvironmentError) and e.errno == errno.EACCES:
                     exit_code = 126

@@ -6,12 +6,12 @@
 psh |version|
 =============
 
-psh allows you to spawn new processes in the Unix shell-style way. It is
-inspired by `sh <http://amoffat.github.com/sh/>`_ module but has fully
-different implementation and API.
+psh allows you to spawn processes in Unix shell-style way. It is inspired by
+`sh <http://amoffat.github.com/sh/>`_ module but has fully different
+implementation and API.
 
 Unix shell is very convenient for spawning processes, connecting them into
-pipes, etc, but it has a very limited language which is often not suitable for
+pipes, etc., but it has a very limited language which is often not suitable for
 writing complex programs. Python is a very flexible and reach language which is
 used in a wide variety of application domains, but its standard
 :py:mod:`subprocess` module is very limited. psh combines the power of Python
@@ -78,35 +78,35 @@ which can be executed. To obtain a :py:class:`Program` object just write::
     from psh import sh
     echo = sh.echo
 
-For commands that have dashes in their names, for example ``google-chrome``,
-substitute the dash for an underscore::
+For programs that have dashes in their names, for example ``google-chrome``,
+substitute the dash with an underscore::
 
 	from psh import sh
 	sh.google_chrome("http://google.com")
 
 .. note::
 
-    For commands with more exotic characters in their names, like ``.`` you may
-    use :py:meth:`sh.__call__` method::
+    For programs with more exotic characters in their names, like ``.`` or
+    ``_`` you may use :py:meth:`sh.__call__` method::
 
         from psh import sh
-
         python = sh("python2.7")
         script = sh("/path/to/script.sh")
 
 To execute a program just call it as if it is a function and then call
 :py:meth:`~Process.execute` method::
 
+    from psh import sh
     sh.echo("text").execute()
     sh("python2.7")("script.py").execute()
 
 ``sh.echo("text")`` returns a :py:class:`Process` instance which holds all
 arguments and state of the process which will be executed.
 
-Process is not executed automatically by default when :py:class:`Process`
-object is created. This is done so to support piping and process output
-iteration (see :ref:`piping`, :ref:`output-iteration`). But if you want just
-simply run commands, you may use ``_defer = False`` option::
+A process is not executed automatically by default when a :py:class:`Process`
+object is created. This is done so to support :ref:`piping` and
+:ref:`output-iteration`. But if you want just simply run commands, you may use
+``_defer = False`` option::
 
     from psh import sh
     sh.service("httpd", "start", _defer = False)
@@ -120,18 +120,18 @@ as default (see :ref:`default-options`).
 Keyword arguments
 -----------------
 
-Commands support short-form ``-a`` and long-form ``--arg`` arguments as
+Commands support short-form (``-a``) and long-form (``--arg``) arguments as
 keyword arguments::
 
-	sh.useradd("ftp", system = True, shell = "/bin/nologin")
+	sh.useradd("ftp", m = True, system = True, shell = "/usr/sbin/nologin")
 
 which is equal to::
 
-	sh.useradd("--system", "--shell", "/bin/nologin", "ftp")
+	sh.useradd("-m", "--system", "--shell", "/usr/sbin/nologin", "ftp")
 
 where both resolve to::
 
-	useradd --system --shell /bin/nologin ftp
+	useradd -m --system --shell /usr/sbin/nologin ftp
 
 
 .. _piping:
@@ -156,7 +156,7 @@ In this case ``process.stdout()`` will return output of ``du | sort -nr | head -
 
         sh.du() | sh.sort("-nr") | sh.head("-n", 3).execute()
 
-    You may do this by storing a pipe in variable::
+    You may do this by storing a pipe in a variable::
 
         process = sh.du() | sh.sort("-nr") | sh.head("-n", 3)
         process.execute()
@@ -165,6 +165,8 @@ In this case ``process.stdout()`` will return output of ``du | sort -nr | head -
 
         ( sh.du() | sh.sort("-nr") | sh.head("-n", 3) ).execute()
 
+
+.. _io-redirection:
 
 I/O redirection
 ---------------
@@ -175,15 +177,15 @@ psh can redirect the standard input, output and error streams::
     sh.echo("text", _stdout = psh.DEVNULL, _stderr = psh.STDOUT)
 
     # echo -n "text" | cat
-    sh.echo("text", _stdin = "text")
+    sh.cat(_stdin = "text")
 
     # cat < file
-    sh.cat("text", _stdin = psh.File("file"))
+    sh.cat(_stdin = psh.File("file"))
 
 or even use Python's generators as input::
 
-    # Output: "1\n2\n3\n4\n5\n"
-    sh.cat(_stdin = ( str(i) + "\n" for i in xrange(0, 5) )
+    # Output: "0\n1\n2\n3\n4\n"
+    sh.cat(_stdin = ( str(i) + "\n" for i in xrange(0, 5) ))
 
 
 .. _exit-codes:
@@ -191,28 +193,28 @@ or even use Python's generators as input::
 Exit codes
 ----------
 
-Normal processes exit with exit code 0. Process exit code can be obtained
+Normal processes exit with exit code 0. Process' exit code can be obtained
 through :py:meth:`~Process.status()`::
 
     assert sh.true().execute().status() == 0
 
-If a process terminates a nonzero exit code, an exception is raised.
+If a process terminates with a nonzero exit code, an exception is raised.
 
 Some programs return nonzero exit codes even though they succeed. If you know
 which codes a program might returns and you don't want to deal with doing no-op
 exception handling, you can use the ``_ok_statuses`` option::
 
-    sh.mount() | sh.egrep(^/dev/", _ok_statuses = [ 0, 1 ]) | sh.sort()
+    sh.mount() | sh.egrep("^/dev/", _ok_statuses = [ 0, 1 ]) | sh.sort()
 
 This means that the ``grep`` command will not generate an exception if the
-process exits with 0 or 1 exit code.
+process exit with 0 or 1 exit code.
 
 .. note::
 
-    Please notice that even if you connect a few processes in a pipe, an
-    exception will be raised even if a failed command is not the last command
-    in the pipe. This gives you a great power of controlling process execution
-    in a very easy way which is not available in the shell.
+    Please notice that if you connect a few processes in a pipe, an exception
+    will be raised even if a failed command is not the last command in the
+    pipe. This gives you a great power of controlling process execution in a
+    very easy way which is not available in the shell.
 
 
 .. _default-options:
@@ -225,23 +227,25 @@ As you saw above, you can control process execution via options passed to the
 realize that the default option values is not very suitable for you and you
 override them almost in every command.
 
-For example, you want all commands executed immediately saving their original
-input and output file descriptors. You can do this by overriding the default
-option values for the specific command::
+For example, you want all commands to be executed immediately saving their
+original input and output file descriptors. You can do this by overriding the
+default option values for the specific command::
 
     from psh import Program, STDIN, STDOUT, STDERR
 
     ssh = Program("ssh", "user@host", _stdin = STDIN, _stdout = STDOUT, _stderr = STDERR, _defer = False)
 
-    # Immediatly executes ``ssh user@host df -h`` preserving the original
+    # Immediatly executes `ssh user@host df -h` preserving the original
     # standart file descriptors.
     ssh("df", "-h")
 
 or you can override them for all commands you execute::
 
     from psh import Sh, STDIN, STDOUT, STDERR
-    sh = Sh(_stdin = STDIN, _stdout = STDOU, _stderr = STDERR, _defer = False)
+    sh = Sh(_stdin = STDIN, _stdout = STDOUT, _stderr = STDERR, _defer = False)
 
+    # Immediatly executes `ssh user@host df -h` preserving the original
+    # standart file descriptors.
     sh.ssh("user@host", "df", "-h")
 
 
@@ -249,9 +253,9 @@ or you can override them for all commands you execute::
 ---------------
 
 You can use ``with`` statement on :py:class:`Process` objects to guarantee that
-the process will be wait()'ed when you leave the ``with`` context, which also
+the process will be :py:meth:`~Process.wait()`'ed when you leave the ``with`` context, which also
 frees all opened file descriptors and other resources (see :py:class:`Process`
-reference).
+reference for details).
 
 Using ``with`` context with :py:class:`Process` objects is the same as with all
 other Python's objects::
@@ -277,14 +281,14 @@ objects::
 
     with sh.cat("/var/log/messages") as cat:
         for line in cat:
-            print line
+            print line,
 
 The process is automatically executed when iteration is initiated.
 
 .. note::
 
     You should always iterate over process output inside a ``with`` context
-    (see :py:class:`Process` for description why).
+    (see :py:class:`Process` reference for description why).
 
 
 .. _working-with-ssh:
@@ -292,12 +296,13 @@ The process is automatically executed when iteration is initiated.
 Working with SSH
 ----------------
 
-When you need to run a specific command on a remote host you have to run ssh
-and pass commands to it as arguments which breaks the all idea of creating and
-piping processes with psh. For this reason psh gives you a way to run processes
-on a remote host in the same way you use for the local host. The only thing you
-have to do is to run shell process (ssh, pdsh, etc) with ``_shell = True``
-option and pass a :py:class:`Process` object as an argument to it::
+When you need to run a specific command on a remote host you have to run
+``ssh`` and pass commands to it as arguments which breaks the all idea of
+creating and piping processes with psh. For this reason psh gives you a way to
+run processes on a remote host in the same way you use for the local host. The
+only thing you have to do is to run a remote shell process (``ssh``, ``pdsh``,
+etc.) with ``_shell = True`` option and pass a :py:class:`Process` object as an
+argument to it::
 
     import re
     from psh import sh
@@ -312,14 +317,23 @@ option and pass a :py:class:`Process` object as an argument to it::
 
 When ``_shell = True`` option is passed, all :py:class:`Process` instances that
 you specified as arguments will be converted to a shell script, which is equal
-to the passed command, and ssh will execute it on the remote side.
+to the passed command, and ``ssh`` will execute it on the remote side.
 
-For the simple commands the script will be very simple. For example,
-``sh.ssh("host", sh.echo("text", _stderr = psh.STDOUT))`` executes ``TODO``,
-but for piped commands the script will be more complex. The
+For simple commands a generated script will be quite expectable. For example,
+``sh.ssh("host", sh.echo("text", _stderr = psh.STDOUT), _shell = True)``
+executes ``ssh host 'echo text 2>&1'``, but for piped commands the script will
+be more complex. For example, the
 ``sh.ssh("myserver.com", sh.df() | sh.egrep("^/dev/"), _shell = True)``
-executes something like ``TODO``. This complexity is required to detect errors
-in processes in the middle of the pipe.
+executes something like
+``bash -c 'df | egrep '"'"'^/dev/'"'"'; statuses=(${PIPESTATUS[@]}); case ${statuses[0]} in 0);; *) exit 128;; esac; exit ${statuses[1]};'``
+on *myserver.com* host. This complexity is required to detect errors in
+processes in the middle of the pipe.
+
+.. note::
+
+   At this time ``_shell = True`` supports only basic I/O redirections such as
+   ``>&2``, ``< file``, ``2>&1``, etc (see :ref:`io-redirection`). Using other
+   redirections causes an exception to be raised.
 
 .. note::
 
@@ -332,13 +346,14 @@ in processes in the middle of the pipe.
         ssh("host", sh.echo("data") | sh.grep("text") | sh.wc("-l"), _shell = True)
 
     Both commands will raise :py:class:`ExecutionError`, but for the first one
-    :py:meth:`ExecutionError.status()` will return 1 from failed ``grep``
+    :py:meth:`ExecutionError.status()` will return 1 from the failed ``grep``
     command and for the second one :py:meth:`ExecutionError.status()` will
     return 128.
 
-    This is because there is no way to pass pair "failed command, return status
-    code" from within ssh without making the generated script ridiculously
-    complex, so all TODO
+    This is because there is no way to pass a pair "failed command, return
+    status code" from within ssh without making the generated script
+    ridiculously complex. So all error codes of all processes in the pipe
+    except the last one is converted to 128.
 
 
 More info

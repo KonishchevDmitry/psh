@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # psh documentation build configuration file, created by
-# sphinx-quickstart on Thu Oct 11 09:16:58 2012.
+# sphinx-quickstart on Mon Oct 15 23:21:00 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -11,14 +11,12 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-# TODO
 import sys, os
-sys.path.append("..")
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -27,10 +25,7 @@ sys.path.append("..")
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage']
-# TODO
-extensions.append('sphinx.ext.intersphinx')
-intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None)}
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -245,3 +240,7 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {'http://docs.python.org/': None}

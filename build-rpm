@@ -1,0 +1,18 @@
+#!/bin/sh -e
+#
+# Builds RPM package
+#
+
+project=psh
+name=$project
+source_path=~/rpmbuild/SOURCES/$project.tar.gz
+
+if [ $1 == "--debug" ]; then
+    tar -czf "$source_path" --transform='s#^\.\(/\|$\)#'"$name"'\1#' .
+else
+    # Filter out dotfiles
+    objects="$(git archive --format=tar HEAD | tar --list | egrep -o '^[^./][^/]*' | sort -u)"
+    git archive --format tar --prefix "$name/" HEAD $objects | gzip -9 > "$source_path"
+fi
+
+rpmbuild -ba python-psh.spec

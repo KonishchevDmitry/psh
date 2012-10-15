@@ -1,18 +1,7 @@
-"""Process management library.
-
-All library's objects are thread-safe with the following exception: Process
-output iterators are not thread-safe. You mustn't use the same output iterator
-from different threads simultaneously. In other case it leads to unexpected
-results. You also mustn't use 'with' contexts simultaneously from different
-threads on the same :py:class:`Process` object, because when one thread leave
-'with' context it will invalidate an output iterator from another thread which
-is not thread-safe.
-"""
-
 from __future__ import unicode_literals
 
 from psh.process import Process
-from psh.process import STDIN, STDOUT, STDERR, File, DEVNULL
+from psh.process import STDIN, STDOUT, STDERR, PIPE, File, DEVNULL
 from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState, ProcessOutputWasTruncated
 
 
@@ -43,7 +32,7 @@ class Sh(object):
 
 
 class Program:
-    """Represents a program."""
+    """Represents an executable program."""
 
     def __init__(self, program, *args, **kwargs):
         # Default process arguments
@@ -54,7 +43,7 @@ class Program:
 
 
     def __call__(self, *args, **kwargs):
-        """Creates a Process instance for this program."""
+        """Creates a :py:class:`Process` instance for this program."""
 
         args = self.__args + args
 
@@ -65,4 +54,4 @@ class Program:
 
 
 sh = Sh()
-"""Program object factory."""
+"""Default :py:class:`Program` object factory."""

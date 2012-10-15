@@ -31,17 +31,17 @@ from psh._process.pipe import Pipe
 LOG = logging.getLogger(__name__)
 
 
-class PIPE: pass
-"""A value to configure redirection of stdout/stderr to a pipe."""
+class PIPE:
+    """A value to configure redirection of stdout/stderr to a pipe."""
 
-class STDIN: pass
-"""A value to disable stdin redirection."""
+class STDIN:
+    """A value to disable stdin redirection."""
 
-class STDOUT: pass
-"""A value to configure redirection of stdout/stderr to stdout."""
+class STDOUT:
+    """A value to configure redirection of stdout/stderr to stdout."""
 
-class STDERR: pass
-"""A value to configure redirection of stdout/stderr to stderr."""
+class STDERR:
+    """A value to configure redirection of stdout/stderr to stderr."""
 
 class File(object):
     """A class to configure redirection of stdin/stdout/stderr from/to a file."""
@@ -69,7 +69,7 @@ _PROCESS_STATE_TERMINATED = 3
 
 class Process:
     # TODO: argument docs
-    """Represents a process.
+    r"""Represents a process.
 
     Process object doesn't hold any resources (file descriptors, etc.) until
     it is executed. If it's created with ``_defer`` option (see
@@ -98,14 +98,66 @@ class Process:
     its output iterators became closed.
 
 
-    _wait_for_output (default is True) -- if _stdout = PIPE or _stderr = PIPE
-    and _wait_for_output is True, wait() returns only when EOF will be gotten
-    on this pipes. Attention: output iterators always read all data from
-    stdout.
+    :keyword _defer: if False, the process will be executed automatically in
+        the :py:class:`Process` constructor (see :ref:`command-execution`)
+        (default is :py:const:`True`)
+    :type _defer: bool
 
-    _truncate_output (default if False) -- if _wait_for_output is False and
-    _truncate_output is True, no exception raised by wait() when there is data
-    in stdout or stderr.
+
+    :keyword _env: overrides the process environment, if None does nothing
+        (default is None)
+    :type _env: :py:class:`dict` or :py:class:`None`
+
+
+    :keyword _iter_delimiter: Separator which will be used as a delimiter for
+        process output iteration (see :ref:`output-iteration`) (default is
+        "\\n")
+    :type _iter_delimiter: :py:class:`str` or :py:class:`unicode`
+
+
+    :keyword _iter_raw: if :py:const:`True`, output iteration (see
+        :ref:`output-iteration`) will be on raw strings instead of unicode
+        strings (default is :py:const:`True`)
+    :type _iter_raw: bool
+
+
+    :keyword _ok_statuses: a list of exit status codes that are considered as
+        successful (see :ref:`exit-codes`) (default is ``[ 0 ]``)
+    :type _ok_statuses: a list of integers
+
+
+    :keyword _shell: if True, accept :py:class:`Process` objects as command
+        arguments by translating them into a shell script (see
+        :ref:`working-with-ssh`) (default is :py:const:`False`)
+    :type _shell: bool
+
+
+    :keyword _stdin: specifies stdin redirection (default is :py:data:`DEVNULL`)
+    :type _stdin: :py:class:`str`, :py:class:`unicode`, :py:const:`STDIN`,
+                  :py:class:`File`, :py:class:`collections.Iterator`,
+                  :py:class:`collections.Iterable`
+
+
+    :keyword _stdout: specifies stdout redirection (default is :py:const:`PIPE`)
+    :type _stdout: :py:class:`File`, :py:const:`STDOUT`, :py:const:`STDERR`
+
+
+    :keyword _stderr: specifies stderr redirection (default is :py:const:`PIPE`)
+    :type _stderr: :py:class:`File`, :py:const:`STDOUT`, :py:const:`STDERR`
+
+
+    :keyword _truncate_output: if ``_wait_for_output = False`` and
+        ``_truncate_output = True``, no exception raised by
+        :py:meth:`~Process.wait()` when there is data in stdout or stderr
+        (default is :py:const:`False`)
+    :type _truncate_output: bool
+
+
+    :keyword _wait_for_output: if ``_stdout = PIPE`` or ``_stderr = PIPE`` and
+        ``_wait_for_output = True``, :py:meth:`~Process.wait()` returns only
+        when EOF will be gotten on this pipes (attention: output iterators
+        always read all data from stdout) (default is :py:const:`True`)
+    :type _wait_for_output: bool
     """
 
     __stdin_source = None
@@ -118,43 +170,31 @@ class Process:
     """The process' stdout target (another process, stderr, etc.)."""
 
     __stderr_target = PIPE
-    """The process' stderr target (another process, stdout, etc.)."""
+    """The process' stderr target (stdout, stderr, etc.)."""
 
 
     __wait_for_output = True
-    """See _wait_for_output description."""
+    """See _wait_for_output option description."""
 
     __truncate_output = False
-    """See _truncate_output description."""
+    """See _truncate_output option description."""
 
 
     __defer = True
-    """
-    If False, the process will be executed automatically in the Process
-    constructor.
-    """
+    """See _defer option description."""
 
     __shell = False
-    """
-    If True, accept Process objects as command arguments by translating them
-    into a shell script.
-    """
+    """See _shell option description."""
 
     __env = None
-    """The process' environment."""
+    """See _env option description."""
 
 
     __iter_raw = False
-    """
-    True if output iteration will be on raw strings instead of unicode
-    strings.
-    """
+    """See _iter_raw option description."""
 
     __iter_delimiter = b"\n"
-    """
-    Separator which will be used as a delimiter for process output
-    iteration.
-    """
+    """See _iter_delimiter option description."""
 
 
     __error = None
@@ -1047,14 +1087,14 @@ class Process:
                 self.__shell = check_arg(option, value, bool)
             elif option == "_stderr":
                 self.__stderr_target = check_arg(
-                    option, value, types = File, values = ( STDOUT, STDERR ))
+                    option, value, types = File, values = ( STDOUT, STDERR, PIPE ))
             elif option == "_stdin":
                 self.__stdin_source = check_arg(option, value,
                     types = ( str, unicode, File, collections.Iterator, collections.Iterable ),
                     values = ( STDIN, ))
             elif option == "_stdout":
                 self.__stdout_target = check_arg(
-                    option, value, types = File, values = ( STDOUT, STDERR ))
+                    option, value, types = File, values = ( STDOUT, STDERR, PIPE ))
             elif option == "_truncate_output":
                 self.__truncate_output = check_arg(option, value, bool)
             elif option == "_wait_for_output":

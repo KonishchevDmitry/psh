@@ -1,6 +1,4 @@
-..
-    TODO
-    check all examples
+..  TODO: check all examples
 
 .. py:currentmodule:: psh
 
@@ -15,10 +13,9 @@ different implementation and API.
 Unix shell is very convenient for spawning processes, connecting them into
 pipes, etc, but it has a very limited language which is often not suitable for
 writing complex programs. Python is a very flexible and reach language which is
-used in a wide variety of application domains, but its standard `subprocess
-<http://docs.python.org/library/subprocess.html>`_ module is very limited. psh
-combines the power of Python language and an elegant shell-style way to execute
-processes.
+used in a wide variety of application domains, but its standard
+:py:mod:`subprocess` module is very limited. psh combines the power of Python
+language and an elegant shell-style way to execute processes.
 
 
 Examples
@@ -98,7 +95,7 @@ substitute the dash for an underscore::
         script = sh("/path/to/script.sh")
 
 To execute a program just call it as if it is a function and then call
-:py:meth:`Process.execute` method::
+:py:meth:`~Process.execute` method::
 
     sh.echo("text").execute()
     sh("python2.7")("script.py").execute()
@@ -108,8 +105,8 @@ arguments and state of the process which will be executed.
 
 Process is not executed automatically by default when :py:class:`Process`
 object is created. This is done so to support piping and process output
-iteration (see :ref:`piping`, TODO). But if you want just simply run commands,
-you may use ``_defer = False`` option::
+iteration (see :ref:`piping`, :ref:`output-iteration`). But if you want just
+simply run commands, you may use ``_defer = False`` option::
 
     from psh import sh
     sh.service("httpd", "start", _defer = False)
@@ -117,7 +114,7 @@ you may use ``_defer = False`` option::
 In this case ``service httpd start`` will be executed immediately and
 ``sh.service(...)`` call will return only when the process will be terminated.
 If you want to always run processes immediately, you may set ``_defer = False``
-as default (see TODO).
+as default (see :ref:`default-options`).
 
 
 Keyword arguments
@@ -143,8 +140,8 @@ Piping
 ------
 
 Shell-style piping is performed using :py:class:`Process` object composition.
-Just pass one command as the input to another, and :py:mod:`psh` will create a
-pipe between the two::
+Just pass one command as the input to another, and psh will create a pipe
+between the two::
 
     process = sh.du() | sh.sort("-nr") | sh.head("-n", 3)
     process.execute()
@@ -189,19 +186,20 @@ or even use Python's generators as input::
     sh.cat(_stdin = ( str(i) + "\n" for i in xrange(0, 5) )
 
 
+.. _exit-codes:
+
 Exit codes
 ----------
 
 Normal processes exit with exit code 0. Process exit code can be obtained
-through py:meth:`Process.status()`::
+through :py:meth:`~Process.status()`::
 
     assert sh.true().execute().status() == 0
 
-If a process terminates with an error, and the exit code is not 0, an exception
-is raised.
+If a process terminates a nonzero exit code, an exception is raised.
 
 Some programs return nonzero exit codes even though they succeed. If you know
-which code a program might returns and you don't want to deal with doing no-op
+which codes a program might returns and you don't want to deal with doing no-op
 exception handling, you can use the ``_ok_statuses`` option::
 
     sh.mount() | sh.egrep(^/dev/", _ok_statuses = [ 0, 1 ]) | sh.sort()
@@ -217,6 +215,8 @@ process exits with 0 or 1 exit code.
     in a very easy way which is not available in the shell.
 
 
+.. _default-options:
+
 Setting default process options
 -------------------------------
 
@@ -225,13 +225,13 @@ As you saw above, you can control process execution via options passed to the
 realize that the default option values is not very suitable for you and you
 override them almost in every command.
 
-For example, you want all commands executed immediately with saving their
-original input and output file descriptors. You can do this by overriding the
-default option values for the specific command::
+For example, you want all commands executed immediately saving their original
+input and output file descriptors. You can do this by overriding the default
+option values for the specific command::
 
     from psh import Program, STDIN, STDOUT, STDERR
 
-    ssh = Program("ssh", "user@host", _stdin = STDIN, _stdout = STDOU, _stderr = STDERR, _defer = False)
+    ssh = Program("ssh", "user@host", _stdin = STDIN, _stdout = STDOUT, _stderr = STDERR, _defer = False)
 
     # Immediatly executes ``ssh user@host df -h`` preserving the original
     # standart file descriptors.
@@ -248,12 +248,13 @@ or you can override them for all commands you execute::
 'With' contexts
 ---------------
 
-You can use 'with' statement on :py:class:`Process` objects to guarantee that
-the process will be wait()'ed when you leave the 'with' context, which also
-frees all opened file descriptors and other resources (see TODO).
+You can use ``with`` statement on :py:class:`Process` objects to guarantee that
+the process will be wait()'ed when you leave the ``with`` context, which also
+frees all opened file descriptors and other resources (see :py:class:`Process`
+reference).
 
-Using ``with`` context with Process objects is the same as with all other
-Python's objects::
+Using ``with`` context with :py:class:`Process` objects is the same as with all
+other Python's objects::
 
     from psh import sh
 
@@ -263,6 +264,8 @@ Python's objects::
 
     # process will be terminated here
 
+
+.. _output-iteration:
 
 Iterating over output
 ---------------------
@@ -280,15 +283,17 @@ The process is automatically executed when iteration is initiated.
 
 .. note::
 
-    You should always iterate over process output inside a `with` context (see
-    TODO for description why).
+    You should always iterate over process output inside a ``with`` context
+    (see :py:class:`Process` for description why).
 
+
+.. _working-with-ssh:
 
 Working with SSH
 ----------------
 
 When you need to run a specific command on a remote host you have to run ssh
-and pass commands to it as arguments which breaks all the idea of creating and
+and pass commands to it as arguments which breaks the all idea of creating and
 piping processes with psh. For this reason psh gives you a way to run processes
 on a remote host in the same way you use for the local host. The only thing you
 have to do is to run shell process (ssh, pdsh, etc) with ``_shell = True``
@@ -310,10 +315,10 @@ you specified as arguments will be converted to a shell script, which is equal
 to the passed command, and ssh will execute it on the remote side.
 
 For the simple commands the script will be very simple. For example,
-``sh.ssh("host", sh.echo("text", _stderr = psh.STDOUT))`` will execute
-``TODO``, but for piped commands the script will be more complex. The
-``sh.ssh("myserver.com", sh.df() | sh.egrep("^/dev/"), _shell = True)`` will
-execute something like ``TODO``. This complexity is required to detect errors
+``sh.ssh("host", sh.echo("text", _stderr = psh.STDOUT))`` executes ``TODO``,
+but for piped commands the script will be more complex. The
+``sh.ssh("myserver.com", sh.df() | sh.egrep("^/dev/"), _shell = True)``
+executes something like ``TODO``. This complexity is required to detect errors
 in processes in the middle of the pipe.
 
 .. note::
@@ -326,18 +331,18 @@ in processes in the middle of the pipe.
 
         ssh("host", sh.echo("data") | sh.grep("text") | sh.wc("-l"), _shell = True)
 
-    Both commands will raise :py:class:`ExecutionError`, but the first one's
+    Both commands will raise :py:class:`ExecutionError`, but for the first one
     :py:meth:`ExecutionError.status()` will return 1 from failed ``grep``
-    command and the second one's :py:meth:`ExecutionError.status()` will return
-    128.
+    command and for the second one :py:meth:`ExecutionError.status()` will
+    return 128.
 
     This is because there is no way to pass pair "failed command, return status
     code" from within ssh without making the generated script ridiculously
-    complex.
+    complex, so all TODO
 
 
 More info
 ---------
 
-Please read the reference on :py:mod:`psh` module and :py:class:`Process` class
-which explains some important details, thread-safety guaranties, etc.
+Please read the :ref:`reference` which explains some important details,
+thread-safety guaranties and additional features.

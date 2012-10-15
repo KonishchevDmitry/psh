@@ -6,7 +6,7 @@ import psys
 
 
 class Error(Exception):
-    """The base class for all exceptions the library throws."""
+    """The base class for all exceptions the module throws."""
 
     def __init__(self, error, *args, **kwargs):
         super(Error, self).__init__(

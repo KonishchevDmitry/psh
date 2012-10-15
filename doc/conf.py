@@ -11,6 +11,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+# TODO
 import sys, os
 sys.path.append("..")
 
@@ -27,6 +28,9 @@ sys.path.append("..")
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage']
+# TODO
+extensions.append('sphinx.ext.intersphinx')
+intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

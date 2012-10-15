@@ -38,20 +38,30 @@ class STDIN:
     """A value to disable stdin redirection."""
 
 class STDOUT:
-    """A value to configure redirection of stdout/stderr to stdout."""
+    """
+    A value to disable stdout redirection or configure redirection of stderr
+    to stdout.
+    """
 
 class STDERR:
-    """A value to configure redirection of stdout/stderr to stderr."""
+    """
+    A value to disable stderr redirection or configure redirection of stdout
+    to stderr.
+    """
 
 class File(object):
-    """A class to configure redirection of stdin/stdout/stderr from/to a file."""
+    """
+    A class to configure redirection of stdin/stdout/stderr from/to a file.
+    """
 
     def __init__(self, path, append = False):
         self.path = path
         self.append = append
 
 DEVNULL = File("/dev/null")
-"""A value to configure redirection of stdin/stdout/stderr from/to /dev/null."""
+"""
+A value to configure redirection of stdin/stdout/stderr from/to /dev/null.
+"""
 
 
 _PROCESS_STATE_PENDING = 0
@@ -68,56 +78,47 @@ _PROCESS_STATE_TERMINATED = 3
 
 
 class Process:
-    # TODO: argument docs
     r"""Represents a process.
 
-    Process object doesn't hold any resources (file descriptors, etc.) until
-    it is executed. If it's created with ``_defer`` option (see
-    :ref:`command-execution`) or executed with execute(wait = True), all its
-    resources will be freed and the process will be waited when Process with
-    _defer option will be created or execute() returns.  But if you execute a
-    command in other way (by execute(wait = False) or issuing iteration over
-    its output) you should use ``with`` context manager to guarantee that the
-    process will be terminated and all its resources will be freed when the
-    code leaves the current scope but not when Python's garbage collector
-    decide to collect Process and Process' iterator objects. You aren't ought
-    to do so, but its very good to do so to be sure in your program's
-    behaviour.
+    A :py:class:`Process` object doesn't hold any resources (file descriptors,
+    threads, etc.) until it is executed. If it's created with ``_defer =
+    True`` option (which is default, see :ref:`command-execution`) or executed
+    with ``execute()``, all its resources will be freed and the process will
+    be waited when :py:class:`Process` instance with ``_defer = True`` option
+    will be created or ``execute()`` returns. But if you execute a command in
+    other way by ``execute(wait = False)`` or issuing iteration over its
+    output (see :ref:`output-iteration`), you should always use ``with``
+    context manager to guarantee that the process will be
+    :py:meth:`~Process.wait()`'ed and all its resources will be freed when the
+    code leaves the ``with`` context - not when Python's garbage collector
+    decide to collect the :py:class:`Process` and :py:class:`Process`' output
+    iterator objects. You aren't ought to do so, but its very good to do so to
+    be sure in your program's behaviour.
 
-    You can use 'with' statement on Process objects to guarantee that the
-    process will be wait()'ed when you leave the 'with' context (which is also
-    frees all opened file descriptors and other resources).
-
-    If you iterate over process output (see TODO), you should do it within
-    'with' context to guarantee that all opened file descriptors will be
-    closed as soon as you end iteration or leave the 'with' context. Otherwise
-    they will be closed only when Python's garbage collector consider to
-    destroy the output iterator.
-
-    When code leaves a 'with' context associated with a Process instance, all
-    its output iterators became closed.
+    When code leaves a ``with`` context associated with a :py:class:`Process`
+    instance, all its output iterators became closed.
 
 
-    :keyword _defer: if False, the process will be executed automatically in
-        the :py:class:`Process` constructor (see :ref:`command-execution`)
-        (default is :py:const:`True`)
+    :keyword _defer: if :py:const:`False`, the process will be executed
+        automatically in the :py:class:`Process` constructor (see
+        :ref:`command-execution`) (default is :py:const:`True`)
     :type _defer: bool
 
 
-    :keyword _env: overrides the process environment, if None does nothing
-        (default is None)
+    :keyword _env: overrides the process environment, if :py:const:`None` does
+        nothing (default is :py:const:`None`)
     :type _env: :py:class:`dict` or :py:class:`None`
 
 
-    :keyword _iter_delimiter: Separator which will be used as a delimiter for
+    :keyword _iter_delimiter: separator which will be used as a delimiter for
         process output iteration (see :ref:`output-iteration`) (default is
         "\\n")
     :type _iter_delimiter: :py:class:`str` or :py:class:`unicode`
 
 
-    :keyword _iter_raw: if :py:const:`True`, output iteration (see
-        :ref:`output-iteration`) will be on raw strings instead of unicode
-        strings (default is :py:const:`True`)
+    :keyword _iter_raw: if :py:const:`True`, output iteration will be on raw
+        strings instead of unicode strings (see :ref:`output-iteration`)
+        (default is :py:const:`True`)
     :type _iter_raw: bool
 
 
@@ -132,31 +133,35 @@ class Process:
     :type _shell: bool
 
 
-    :keyword _stdin: specifies stdin redirection (default is :py:data:`DEVNULL`)
+    :keyword _stdin: specifies stdin redirection (see :ref:`io-redirection`)
+        (default is :py:data:`DEVNULL`)
     :type _stdin: :py:class:`str`, :py:class:`unicode`, :py:const:`STDIN`,
                   :py:class:`File`, :py:class:`collections.Iterator`,
                   :py:class:`collections.Iterable`
 
 
-    :keyword _stdout: specifies stdout redirection (default is :py:const:`PIPE`)
+    :keyword _stdout: specifies stdout redirection (see :ref:`io-redirection`)
+        (default is :py:const:`PIPE`)
     :type _stdout: :py:class:`File`, :py:const:`STDOUT`, :py:const:`STDERR`
 
 
-    :keyword _stderr: specifies stderr redirection (default is :py:const:`PIPE`)
+    :keyword _stderr: specifies stderr redirection (see :ref:`io-redirection`)
+        (default is :py:const:`PIPE`)
     :type _stderr: :py:class:`File`, :py:const:`STDOUT`, :py:const:`STDERR`
 
 
     :keyword _truncate_output: if ``_wait_for_output = False`` and
-        ``_truncate_output = True``, no exception raised by
-        :py:meth:`~Process.wait()` when there is data in stdout or stderr
-        (default is :py:const:`False`)
+        ``_truncate_output = True``, no exception is raised by
+        :py:meth:`~Process.execute()` when there is data in stdout or stderr
+        after the process termination (default is :py:const:`False`)
     :type _truncate_output: bool
 
 
     :keyword _wait_for_output: if ``_stdout = PIPE`` or ``_stderr = PIPE`` and
-        ``_wait_for_output = True``, :py:meth:`~Process.wait()` returns only
-        when EOF will be gotten on this pipes (attention: output iterators
-        always read all data from stdout) (default is :py:const:`True`)
+        ``_wait_for_output = True``, :py:meth:`~Process.execute()` and
+        :py:meth:`~Process.wait()` returns only when EOF is gotten on this
+        pipes (attention: output iterators always read all data from stdout)
+        (default is :py:const:`True`)
     :type _wait_for_output: bool
     """
 
@@ -201,7 +206,7 @@ class Process:
     """Execution error if occurred."""
 
 
-    def __init__(self, program, *args, **kwargs):
+    def __init__(self, program, *args, **options):
         # Data lock
         self.__lock = threading.Lock()
 
@@ -249,7 +254,7 @@ class Process:
 
 
         # Parse the command arguments
-        self.__parse_args(args, kwargs)
+        self.__parse_args(args, options)
 
         # Execute the process if it is not deferred
         if not self.__defer:
@@ -257,16 +262,14 @@ class Process:
 
 
     def __enter__(self):
-        """
-        'with' operator guarantees that the process will be wait()'ed and the
-        output iterator will be closed (if created).
-        """
-
         return self
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Waits for the process termination."""
+        """
+        Waits for the process termination and closes the output iterator (if
+        created).
+        """
 
         with self.__lock:
             context_objects = self.__context_objects
@@ -285,7 +288,7 @@ class Process:
 
 
     def __iter__(self):
-        """Executes the process and returns a line iterator to its output."""
+        """Executes the process and returns an iterator to its output."""
 
         iterator = OutputIterator(
             self, self.__iter_raw, self.__iter_delimiter)
@@ -332,7 +335,8 @@ class Process:
     def __str__(self):
         """Returns the command string.
 
-        Note: very lazy formatting.
+        .. note::
+            Very lazy formatting.
         """
 
         return psys.b(self.__unicode__())
@@ -341,7 +345,8 @@ class Process:
     def __unicode__(self):
         """Returns the command string.
 
-        Note: very lazy formatting.
+        .. note::
+            Very lazy formatting.
         """
 
         command = ""
@@ -385,8 +390,13 @@ class Process:
         return self.__command[:]
 
 
-    def execute(self, check_status = True, wait = True):
-        """Executes the command."""
+    def execute(self, wait = True, check_status = True):
+        """Executes the command.
+
+        :param wait: if :py:const:`True`, calls ``wait(check_status =
+            check_status)`` after process execution.
+        :type wait: bool
+        """
 
         self._execute()
 
@@ -399,7 +409,11 @@ class Process:
     def kill(self, signal = signal.SIGTERM):
         """Kills the process.
 
-        Returns True if the process received the signal.
+        :param signal: signal which will be used to kill the process.
+        :type signal: int
+
+        :returns: :py:const:`True` if the process received the signal (which
+            indicates that it's still running).
         """
 
         if self.__state < _PROCESS_STATE_RUNNING:
@@ -429,14 +443,18 @@ class Process:
 
 
     def raw_stderr(self):
-        """Returns the process' raw stderr."""
+        """
+        Returns the process' captured raw stderr (if ``_stderr = PIPE``).
+        """
 
         self.__ensure_terminated()
         return self.__stderr.getvalue()
 
 
     def raw_stdout(self):
-        """Returns the process' raw stdout."""
+        """
+        Returns the process' captured raw stdout (if ``_stdout = PIPE``).
+        """
 
         self.__ensure_terminated()
         return self.__stdout.getvalue()
@@ -450,13 +468,13 @@ class Process:
 
 
     def stderr(self):
-        """Returns the process' stderr."""
+        """Returns the process' captured stderr (if ``_stderr = PIPE``)."""
 
         return psys.u(self.raw_stderr())
 
 
     def stdout(self):
-        """Returns the process' stdout."""
+        """Returns the process' captured stdout (if ``_stdout = PIPE``)."""
 
         return psys.u(self.raw_stdout())
 
@@ -464,8 +482,16 @@ class Process:
     def wait(self, check_status = False, kill = None):
         """Waits for the process termination.
 
-        If kill is not None kills the process with the signal == kill and
-        waits for its termination.
+        :param check_status: if :py:const:`True`, check the process status
+            code (see :ref:`exit-codes`) and other (communication) errors and
+            raise an exception if any error occurred.
+        :type check_status: bool
+
+        :param kill: if is not :py:const:`None`, kills the process with the
+            ``kill(signal = kill)`` and waits for its termination.
+        :type kill: int
+
+        :returns: the process exit status
         """
 
         if self.__state < _PROCESS_STATE_RUNNING:
@@ -1054,7 +1080,7 @@ class Process:
         (self.__stdout if fd == psys.STDOUT_FILENO else self.__stderr).write(data)
 
 
-    def __parse_args(self, args, kwargs):
+    def __parse_args(self, args, options):
         """Parses command arguments and options."""
 
         # Process options -->
@@ -1064,7 +1090,7 @@ class Process:
 
             return value
 
-        for option, value in kwargs.iteritems():
+        for option, value in options.iteritems():
             if not option.startswith("_"):
                 continue
 
@@ -1110,7 +1136,7 @@ class Process:
         # Command arguments -->
         self.__command.append(self.__program)
 
-        for option, value in kwargs.iteritems():
+        for option, value in options.iteritems():
             if option.startswith("_"):
                 pass
             elif len(option) == 1:

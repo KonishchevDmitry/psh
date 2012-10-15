@@ -6,7 +6,7 @@ import psys
 
 
 class Error(Exception):
-    """The base class for all exceptions the module throws."""
+    """A base class for all exceptions the module throws."""
 
     def __init__(self, error, *args, **kwargs):
         super(Error, self).__init__(
@@ -14,7 +14,10 @@ class Error(Exception):
 
 
 class ExecutionError(Error):
-    """Raised when a command failed to execute."""
+    """
+    Raised when a command fails to execute or returns an error exit status
+    code.
+    """
 
     def __init__(self, status, stdout, stderr,
         error = "Program terminated with an error status"):
@@ -27,37 +30,41 @@ class ExecutionError(Error):
 
 
     def raw_stderr(self):
-        """Returns the process' raw stderr."""
+        """
+        Returns the process' captured raw stderr (if ``_stderr = PIPE``).
+        """
 
         return self.__stderr
 
 
     def raw_stdout(self):
-        """Returns the process' raw stdout."""
+        """
+        Returns the process' captured raw stdout (if ``_stdout = PIPE``).
+        """
 
         return self.__stdout
 
 
     def status(self):
-        """Returns the process' exit status."""
+        """Returns the process's exit status."""
 
         return self.__status
 
 
     def stderr(self):
-        """Returns the process' stderr."""
+        """Returns the process' captured stderr (if ``_stderr = PIPE``)."""
 
         return psys.u(self.__stderr)
 
 
     def stdout(self):
-        """Returns the process' stdout."""
+        """Returns the process' captured stdout (if ``_stdout = PIPE``)."""
 
         return psys.u(self.__stdout)
 
 
 class InvalidArgument(Error):
-    """Raised on attempt to start a process with invalid arguments."""
+    """Raised on attempt to start a process with an invalid argument."""
 
     def __init__(self, *args, **kwargs):
         super(InvalidArgument, self).__init__(*args, **kwargs)

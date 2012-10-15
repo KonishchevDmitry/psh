@@ -6,51 +6,51 @@ from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperat
 
 
 class Sh(object):
-    """Program object factory."""
+    """:py:class:`Program` object factory."""
 
-    def __init__(self, **kwargs):
-        for option in kwargs:
+    def __init__(self, **default_options):
+        for option in default_options:
             if not option.startswith("_"):
                 raise InvalidArgument("Invalid argument: all options must start with '_'")
 
         # Default process options
-        self._default_options = kwargs
-
-
-    def __getattribute__(self, attr):
-        """Creates a Program instance."""
-
-        return Program(attr.replace("_", "-"),
-            **object.__getattribute__(self, "_default_options"))
+        self._default_options = default_options
 
 
     def __call__(self, program):
-        """Creates a Program instance."""
+        """Creates a :py:class:`Program` instance."""
 
         return Program(program,
+            **object.__getattribute__(self, "_default_options"))
+
+
+    def __getattribute__(self, program):
+        """Creates a :py:class:`Program` instance."""
+
+        return Program(program.replace("_", "-"),
             **object.__getattribute__(self, "_default_options"))
 
 
 class Program:
     """Represents an executable program."""
 
-    def __init__(self, program, *args, **kwargs):
+    def __init__(self, program, *default_args, **default_options):
         # Default process arguments
-        self.__args = ( program, ) + args
+        self.__args = ( program, ) + default_args
 
         # Default process options
-        self.__kwargs = kwargs
+        self.__options = default_options
 
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **options):
         """Creates a :py:class:`Process` instance for this program."""
 
-        args = self.__args + args
+        result_args = self.__args + args
 
-        options = self.__kwargs.copy()
-        options.update(kwargs)
+        result_options = self.__options.copy()
+        result_options.update(options)
 
-        return Process(*args, **options)
+        return Process(*result_args, **result_options)
 
 
 sh = Sh()

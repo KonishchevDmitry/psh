@@ -61,9 +61,14 @@ def test_command_arguments(test):
     assert unicode(process) == "test --long-long-arg 'long arg' arg"
     assert str(process) == unicode(process).encode("utf-8")
 
-    process = sh.test("arg", none_arg = None)
-    assert process.command() == [ "test", "--none-arg", "arg" ]
-    assert unicode(process) == "test --none-arg arg"
+    process = sh.test("arg", bool_arg = True)
+    assert process.command() == [ "test", "--bool-arg", "arg" ]
+    assert unicode(process) == "test --bool-arg arg"
+    assert str(process) == unicode(process).encode("utf-8")
+
+    process = sh.test("arg", bool_arg = False)
+    assert process.command() == [ "test", "arg" ]
+    assert unicode(process) == "test arg"
     assert str(process) == unicode(process).encode("utf-8")
 
 

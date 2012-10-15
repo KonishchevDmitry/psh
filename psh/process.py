@@ -278,6 +278,7 @@ class Process:
                 obj.close()
 
         if self.__state >= _PROCESS_STATE_RUNNING:
+            # TODO: check status?
             self.wait()
 
         return False
@@ -1113,13 +1114,17 @@ class Process:
             if option.startswith("_"):
                 pass
             elif len(option) == 1:
-                self.__command.append("-" + option)
-                if value is not None:
-                    self.__command.append(_get_arg_value(value, self.__shell))
+                if value is not False:
+                    self.__command.append("-" + option)
+
+                    if value is not True:
+                        self.__command.append(_get_arg_value(value, self.__shell))
             else:
-                self.__command.append("--" + option.replace("_", "-"))
-                if value is not None:
-                    self.__command.append(_get_arg_value(value, self.__shell))
+                if value is not False:
+                    self.__command.append("--" + option.replace("_", "-"))
+
+                    if value is not True:
+                        self.__command.append(_get_arg_value(value, self.__shell))
 
         self.__command += [ _get_arg_value(arg, self.__shell) for arg in args ]
         # Command arguments <--

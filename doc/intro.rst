@@ -1,5 +1,3 @@
-..  TODO: check all examples
-
 .. py:currentmodule:: psh
 
 

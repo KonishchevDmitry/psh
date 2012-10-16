@@ -271,6 +271,9 @@ class Process:
         created).
         """
 
+        if self.__state >= _PROCESS_STATE_RUNNING:
+            self.wait()
+
         with self.__lock:
             context_objects = self.__context_objects
             self.__context_objects = []
@@ -279,10 +282,6 @@ class Process:
             obj = obj()
             if obj is not None:
                 obj.close()
-
-        if self.__state >= _PROCESS_STATE_RUNNING:
-            # TODO: check status?
-            self.wait()
 
         return False
 

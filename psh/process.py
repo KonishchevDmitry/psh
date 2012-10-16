@@ -515,7 +515,8 @@ class Process:
                 raise self.__error
 
             if self.__status not in self.__ok_statuses:
-                raise ExecutionError(self.__status, self.raw_stdout(), self.raw_stderr())
+                raise ExecutionError(unicode(self),
+                    self.__status, self.raw_stdout(), self.raw_stderr())
 
         return self.__status
 
@@ -903,7 +904,8 @@ class Process:
 
                             if not self.__truncate_output:
                                 self.__error = ProcessOutputWasTruncated(
-                                    self.__status, self.__stdout.getvalue(), self.__stderr.getvalue())
+                                    unicode(self), self.__status,
+                                    self.__stdout.getvalue(), self.__stderr.getvalue())
 
                             break
                         else:

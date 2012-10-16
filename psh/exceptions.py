@@ -19,14 +19,20 @@ class ExecutionError(Error):
     code.
     """
 
-    def __init__(self, status, stdout, stderr,
+    def __init__(self, command, status, stdout, stderr,
         error = "Program terminated with an error status"):
 
-        # TODO process
         super(ExecutionError, self).__init__(error)
+        self.__command = command
         self.__status = status
         self.__stdout = stdout
         self.__stderr = stderr
+
+
+    def command(self):
+        """Returns the process command string."""
+
+        return self.__command
 
 
     def raw_stderr(self):
@@ -100,6 +106,6 @@ class ProcessOutputWasTruncated(ExecutionError):
     its children didn't close the output descriptor.
     """
 
-    def __init__(self, status, stdout, stderr):
+    def __init__(self, command, status, stdout, stderr):
         super(ProcessOutputWasTruncated, self).__init__(
-            status, stdout, stderr, error = "The process' output was truncated")
+            command, status, stdout, stderr, error = "The process' output was truncated")

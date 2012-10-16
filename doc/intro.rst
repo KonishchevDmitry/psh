@@ -4,9 +4,10 @@
 psh |version|
 =============
 
-psh allows you to spawn processes in Unix shell-style way. It is inspired by
-`sh <http://amoffat.github.com/sh/>`_ module but has fully different
-implementation and API.
+`psh <https://github.com/KonishchevDmitry/psh>`_ allows you to spawn processes
+in Unix shell-style way. It is inspired by `sh
+<http://amoffat.github.com/sh/>`_ module but has fully different implementation
+and API.
 
 Unix shell is very convenient for spawning processes, connecting them into
 pipes, etc., but it has a very limited language which is often not suitable for
@@ -52,9 +53,9 @@ Output::
 Installation
 ------------
 
-You can install psh by executing the following commands in the source
-directory::
+You can install psh by executing the following commands::
 
+    git clone https://github.com/KonishchevDmitry/psh.git && cd psh
     python setup.py build
     sudo python setup.py install
 

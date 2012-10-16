@@ -36,10 +36,18 @@ def check_leaks(request):
         assert not process.returncode
         assert stdout
 
-        return "\n".join(
-            line for line in stdout.split("\n")
-                if re.search(r"^\s*{pid}\s+(?!{ps_pid})".format(
-                    pid = os.getpid(), ps_pid = process.pid), line))
+        childs = ""
+
+        for line in stdout.split("\n"):
+            match = re.search(r"^\s*{0}\s+(\d+)".format(os.getpid()), line)
+
+            if match is not None and int(match.group(1)) != process.pid:
+                if childs:
+                    childs += "\n"
+
+                childs += line
+
+        return childs
 
     fds = opened_fds()
     threads = running_threads()

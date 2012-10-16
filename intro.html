@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psh 0.1 &mdash; psh 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="psh 0.1 documentation" href="index.html" />
+    <link rel="up" title="Module reference" href="reference.html" />
+    <link rel="prev" title="Module reference" href="reference.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Module reference"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">psh 0.1 documentation</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Module reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="psh-version">
+<h1>psh 0.1<a class="headerlink" href="#psh-version" title="Permalink to this headline">¶</a></h1>
+<p>psh allows you to spawn processes in Unix shell-style way. It is inspired by
+<a class="reference external" href="http://amoffat.github.com/sh/">sh</a> module but has fully different
+implementation and API.</p>
+<p>Unix shell is very convenient for spawning processes, connecting them into
+pipes, etc., but it has a very limited language which is often not suitable for
+writing complex programs. Python is a very flexible and reach language which is
+used in a wide variety of application domains, but its standard
+<a class="reference external" href="http://docs.python.org/2.7/library/subprocess.html#subprocess" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">subprocess</span></tt></a> module is very limited. psh combines the power of Python
+language and an elegant shell-style way to execute processes.</p>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Print output of <tt class="docutils literal"><span class="pre">echo</span> <span class="pre">-n</span> <span class="pre">&quot;text&quot;</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+<span class="k">print</span> <span class="n">sh</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s">&quot;-n&quot;</span><span class="p">,</span> <span class="s">&quot;text&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span><span class="o">.</span><span class="n">stdout</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Get a list of all available network interfaces (<tt class="docutils literal"><span class="pre">ifconfig</span> <span class="pre">|</span> <span class="pre">egrep</span> <span class="pre">-o</span> <span class="pre">&quot;^[^[:space:]:]+&quot;</span></tt>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+<span class="n">interfaces</span> <span class="o">=</span> <span class="p">[</span> <span class="n">iface</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">iface</span> <span class="ow">in</span> <span class="n">sh</span><span class="o">.</span><span class="n">ifconfig</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">egrep</span><span class="p">(</span><span class="s">&quot;-o&quot;</span><span class="p">,</span> <span class="s">&quot;^[^[:space:]:]+&quot;</span><span class="p">)</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>Check free disk space on remote host <em>myserver.com</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+
+<span class="c"># ssh myserver.com &#39;df | egrep &quot;^/dev/&quot;&#39;</span>
+<span class="k">with</span> <span class="n">sh</span><span class="o">.</span><span class="n">ssh</span><span class="p">(</span><span class="s">&quot;myserver.com&quot;</span><span class="p">,</span> <span class="n">sh</span><span class="o">.</span><span class="n">df</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">egrep</span><span class="p">(</span><span class="s">&quot;^/dev/&quot;</span><span class="p">),</span> <span class="n">_shell</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">ssh</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">ssh</span><span class="p">:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">r&quot;^(/dev/[^\s+]+)\s+(?:[^\s]+\s+){3}(\d+)%\s+(/.*)$&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">))</span>
+        <span class="n">device</span><span class="p">,</span> <span class="n">used</span><span class="p">,</span> <span class="n">mount_point</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">used</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">80</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;{0} ({1}) ran out of disk space ({2}%)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">,</span> <span class="n">used</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-python"><pre>/dev/sda1 (/) ran out of disk space (86%)
+/dev/sda2 (/mnt/data) ran out of disk space (95%)</pre>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>You can install psh by executing the following commands in the source
+directory:</p>
+<div class="highlight-python"><pre>python setup.py build
+sudo python setup.py install</pre>
+</div>
+</div>
+</div>
+<div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="command-execution">
+<span id="id1"></span><h2>Command execution<a class="headerlink" href="#command-execution" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="reference.html#module-psh" title="psh"><tt class="xref py py-mod docutils literal"><span class="pre">psh</span></tt></a> module has an object named <a class="reference internal" href="reference.html#psh.sh" title="psh.sh"><tt class="xref py py-data docutils literal"><span class="pre">sh</span></tt></a> which is a factory of
+<a class="reference internal" href="reference.html#psh.Program" title="psh.Program"><tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt></a> objects. A <a class="reference internal" href="reference.html#psh.Program" title="psh.Program"><tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt></a> object represents a program
+which can be executed. To obtain a <a class="reference internal" href="reference.html#psh.Program" title="psh.Program"><tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt></a> object just write:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+<span class="n">echo</span> <span class="o">=</span> <span class="n">sh</span><span class="o">.</span><span class="n">echo</span>
+</pre></div>
+</div>
+<p>For programs that have dashes in their names, for example <tt class="docutils literal"><span class="pre">google-chrome</span></tt>,
+substitute the dash with an underscore:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+<span class="n">sh</span><span class="o">.</span><span class="n">google_chrome</span><span class="p">(</span><span class="s">&quot;http://google.com&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>For programs with more exotic characters in their names, like <tt class="docutils literal"><span class="pre">.</span></tt> or
+<tt class="docutils literal"><span class="pre">_</span></tt> you may use <tt class="xref py py-meth docutils literal"><span class="pre">sh.__call__()</span></tt> method:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+<span class="n">python</span> <span class="o">=</span> <span class="n">sh</span><span class="p">(</span><span class="s">&quot;python2.7&quot;</span><span class="p">)</span>
+<span class="n">script</span> <span class="o">=</span> <span class="n">sh</span><span class="p">(</span><span class="s">&quot;/path/to/script.sh&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>To execute a program just call it as if it is a function and then call
+<a class="reference internal" href="reference.html#psh.Process.execute" title="psh.Process.execute"><tt class="xref py py-meth docutils literal"><span class="pre">execute()</span></tt></a> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+<span class="n">sh</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="n">sh</span><span class="p">(</span><span class="s">&quot;python2.7&quot;</span><span class="p">)(</span><span class="s">&quot;script.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">sh.echo(&quot;text&quot;)</span></tt> returns a <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> instance which holds all
+arguments and state of the process which will be executed.</p>
+<p>A process is not executed automatically by default when a <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a>
+object is created. This is done so to support <a class="reference internal" href="#piping"><em>Piping</em></a> and
+<a class="reference internal" href="#output-iteration"><em>Iterating over output</em></a>. But if you want just simply run commands, you may use
+<tt class="docutils literal"><span class="pre">_defer</span> <span class="pre">=</span> <span class="pre">False</span></tt> option:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+<span class="n">sh</span><span class="o">.</span><span class="n">service</span><span class="p">(</span><span class="s">&quot;httpd&quot;</span><span class="p">,</span> <span class="s">&quot;start&quot;</span><span class="p">,</span> <span class="n">_defer</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case <tt class="docutils literal"><span class="pre">service</span> <span class="pre">httpd</span> <span class="pre">start</span></tt> will be executed immediately and
+<tt class="docutils literal"><span class="pre">sh.service(...)</span></tt> call will return only when the process will be terminated.
+If you want to always run processes immediately, you may set <tt class="docutils literal"><span class="pre">_defer</span> <span class="pre">=</span> <span class="pre">False</span></tt>
+as default (see <a class="reference internal" href="#default-options"><em>Setting default process options</em></a>).</p>
+</div>
+<div class="section" id="keyword-arguments">
+<h2>Keyword arguments<a class="headerlink" href="#keyword-arguments" title="Permalink to this headline">¶</a></h2>
+<p>Commands support short-form (<tt class="docutils literal"><span class="pre">-a</span></tt>) and long-form (<tt class="docutils literal"><span class="pre">--arg</span></tt>) arguments as
+keyword arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sh</span><span class="o">.</span><span class="n">useradd</span><span class="p">(</span><span class="s">&quot;ftp&quot;</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">system</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">shell</span> <span class="o">=</span> <span class="s">&quot;/usr/sbin/nologin&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which is equal to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sh</span><span class="o">.</span><span class="n">useradd</span><span class="p">(</span><span class="s">&quot;-m&quot;</span><span class="p">,</span> <span class="s">&quot;--system&quot;</span><span class="p">,</span> <span class="s">&quot;--shell&quot;</span><span class="p">,</span> <span class="s">&quot;/usr/sbin/nologin&quot;</span><span class="p">,</span> <span class="s">&quot;ftp&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where both resolve to:</p>
+<div class="highlight-python"><pre>useradd -m --system --shell /usr/sbin/nologin ftp</pre>
+</div>
+</div>
+<div class="section" id="piping">
+<span id="id2"></span><h2>Piping<a class="headerlink" href="#piping" title="Permalink to this headline">¶</a></h2>
+<p>Shell-style piping is performed using <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> object composition.
+Just pass one command as the input to another, and psh will create a pipe
+between the two:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">process</span> <span class="o">=</span> <span class="n">sh</span><span class="o">.</span><span class="n">du</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s">&quot;-nr&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="s">&quot;-n&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">process</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="n">process</span><span class="o">.</span><span class="n">stdout</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this case <tt class="docutils literal"><span class="pre">process.stdout()</span></tt> will return output of <tt class="docutils literal"><span class="pre">du</span> <span class="pre">|</span> <span class="pre">sort</span> <span class="pre">-nr</span> <span class="pre">|</span> <span class="pre">head</span> <span class="pre">-n</span> <span class="pre">3</span></tt>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>You can&#8217;t execute a pipe as in the following example because of Python&#8217;s
+evaluation order:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sh</span><span class="o">.</span><span class="n">du</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s">&quot;-nr&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="s">&quot;-n&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You may do this by storing a pipe in a variable:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">process</span> <span class="o">=</span> <span class="n">sh</span><span class="o">.</span><span class="n">du</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s">&quot;-nr&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="s">&quot;-n&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">process</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>or just:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="p">(</span> <span class="n">sh</span><span class="o">.</span><span class="n">du</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s">&quot;-nr&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="s">&quot;-n&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="i-o-redirection">
+<span id="io-redirection"></span><h2>I/O redirection<a class="headerlink" href="#i-o-redirection" title="Permalink to this headline">¶</a></h2>
+<p>psh can redirect the standard input, output and error streams:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># echo text &gt; /dev/null 2&gt;&amp;1</span>
+<span class="n">sh</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">,</span> <span class="n">_stdout</span> <span class="o">=</span> <span class="n">psh</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span> <span class="n">_stderr</span> <span class="o">=</span> <span class="n">psh</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+
+<span class="c"># echo -n &quot;text&quot; | cat</span>
+<span class="n">sh</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">_stdin</span> <span class="o">=</span> <span class="s">&quot;text&quot;</span><span class="p">)</span>
+
+<span class="c"># cat &lt; file</span>
+<span class="n">sh</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">_stdin</span> <span class="o">=</span> <span class="n">psh</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s">&quot;file&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>or even use Python&#8217;s generators as input:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Output: &quot;0\n1\n2\n3\n4\n&quot;</span>
+<span class="n">sh</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">_stdin</span> <span class="o">=</span> <span class="p">(</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="exit-codes">
+<span id="id3"></span><h2>Exit codes<a class="headerlink" href="#exit-codes" title="Permalink to this headline">¶</a></h2>
+<p>Normal processes exit with exit code 0. Process&#8217; exit code can be obtained
+through <a class="reference internal" href="reference.html#psh.Process.status" title="psh.Process.status"><tt class="xref py py-meth docutils literal"><span class="pre">status()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">assert</span> <span class="n">sh</span><span class="o">.</span><span class="n">true</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span><span class="o">.</span><span class="n">status</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>If a process terminates with a nonzero exit code, an exception is raised.</p>
+<p>Some programs return nonzero exit codes even though they succeed. If you know
+which codes a program might returns and you don&#8217;t want to deal with doing no-op
+exception handling, you can use the <tt class="docutils literal"><span class="pre">_ok_statuses</span></tt> option:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sh</span><span class="o">.</span><span class="n">mount</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">egrep</span><span class="p">(</span><span class="s">&quot;^/dev/&quot;</span><span class="p">,</span> <span class="n">_ok_statuses</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="p">])</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This means that the <tt class="docutils literal"><span class="pre">grep</span></tt> command will not generate an exception if the
+process exit with 0 or 1 exit code.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Please notice that if you connect a few processes in a pipe, an exception
+will be raised even if a failed command is not the last command in the
+pipe. This gives you a great power of controlling process execution in a
+very easy way which is not available in the shell.</p>
+</div>
+</div>
+<div class="section" id="setting-default-process-options">
+<span id="default-options"></span><h2>Setting default process options<a class="headerlink" href="#setting-default-process-options" title="Permalink to this headline">¶</a></h2>
+<p>As you saw above, you can control process execution via options passed to the
+<a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> instance, such as <tt class="docutils literal"><span class="pre">_defer</span> <span class="pre">=</span> <span class="pre">False</span></tt>. But sometimes you may
+realize that the default option values is not very suitable for you and you
+override them almost in every command.</p>
+<p>For example, you want all commands to be executed immediately saving their
+original input and output file descriptors. You can do this by overriding the
+default option values for the specific command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">STDIN</span><span class="p">,</span> <span class="n">STDOUT</span><span class="p">,</span> <span class="n">STDERR</span>
+
+<span class="n">ssh</span> <span class="o">=</span> <span class="n">Program</span><span class="p">(</span><span class="s">&quot;ssh&quot;</span><span class="p">,</span> <span class="s">&quot;user@host&quot;</span><span class="p">,</span> <span class="n">_stdin</span> <span class="o">=</span> <span class="n">STDIN</span><span class="p">,</span> <span class="n">_stdout</span> <span class="o">=</span> <span class="n">STDOUT</span><span class="p">,</span> <span class="n">_stderr</span> <span class="o">=</span> <span class="n">STDERR</span><span class="p">,</span> <span class="n">_defer</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+
+<span class="c"># Immediatly executes `ssh user@host df -h` preserving the original</span>
+<span class="c"># standart file descriptors.</span>
+<span class="n">ssh</span><span class="p">(</span><span class="s">&quot;df&quot;</span><span class="p">,</span> <span class="s">&quot;-h&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or you can override them for all commands you execute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">Sh</span><span class="p">,</span> <span class="n">STDIN</span><span class="p">,</span> <span class="n">STDOUT</span><span class="p">,</span> <span class="n">STDERR</span>
+<span class="n">sh</span> <span class="o">=</span> <span class="n">Sh</span><span class="p">(</span><span class="n">_stdin</span> <span class="o">=</span> <span class="n">STDIN</span><span class="p">,</span> <span class="n">_stdout</span> <span class="o">=</span> <span class="n">STDOUT</span><span class="p">,</span> <span class="n">_stderr</span> <span class="o">=</span> <span class="n">STDERR</span><span class="p">,</span> <span class="n">_defer</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+
+<span class="c"># Immediatly executes `ssh user@host df -h` preserving the original</span>
+<span class="c"># standart file descriptors.</span>
+<span class="n">sh</span><span class="o">.</span><span class="n">ssh</span><span class="p">(</span><span class="s">&quot;user@host&quot;</span><span class="p">,</span> <span class="s">&quot;df&quot;</span><span class="p">,</span> <span class="s">&quot;-h&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="with-contexts">
+<h2>&#8216;With&#8217; contexts<a class="headerlink" href="#with-contexts" title="Permalink to this headline">¶</a></h2>
+<p>You can use <tt class="docutils literal"><span class="pre">with</span></tt> statement on <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> objects to guarantee that
+the process will be <a class="reference internal" href="reference.html#psh.Process.wait" title="psh.Process.wait"><tt class="xref py py-meth docutils literal"><span class="pre">wait()</span></tt></a>&#8216;ed when you leave the <tt class="docutils literal"><span class="pre">with</span></tt> context, which also
+frees all opened file descriptors and other resources (see <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a>
+reference for details).</p>
+<p>Using <tt class="docutils literal"><span class="pre">with</span></tt> context with <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> objects is the same as with all
+other Python&#8217;s objects:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+
+<span class="k">with</span> <span class="n">sh</span><span class="o">.</span><span class="n">mount</span><span class="p">()</span> <span class="k">as</span> <span class="n">process</span><span class="p">:</span>
+    <span class="n">process</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">wait</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="c"># do some task here</span>
+
+<span class="c"># process will be terminated here</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="iterating-over-output">
+<span id="output-iteration"></span><h2>Iterating over output<a class="headerlink" href="#iterating-over-output" title="Permalink to this headline">¶</a></h2>
+<p>You can iterate over process output as well you do for all Python&#8217;s file
+objects:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+
+<span class="k">with</span> <span class="n">sh</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="s">&quot;/var/log/messages&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cat</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">cat</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">line</span><span class="p">,</span>
+</pre></div>
+</div>
+<p>The process is automatically executed when iteration is initiated.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You should always iterate over process output inside a <tt class="docutils literal"><span class="pre">with</span></tt> context
+(see <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> reference for description why).</p>
+</div>
+</div>
+<div class="section" id="working-with-ssh">
+<span id="id4"></span><h2>Working with SSH<a class="headerlink" href="#working-with-ssh" title="Permalink to this headline">¶</a></h2>
+<p>When you need to run a specific command on a remote host you have to run
+<tt class="docutils literal"><span class="pre">ssh</span></tt> and pass commands to it as arguments which breaks the all idea of
+creating and piping processes with psh. For this reason psh gives you a way to
+run processes on a remote host in the same way you use for the local host. The
+only thing you have to do is to run a remote shell process (<tt class="docutils literal"><span class="pre">ssh</span></tt>, <tt class="docutils literal"><span class="pre">pdsh</span></tt>,
+etc.) with <tt class="docutils literal"><span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True</span></tt> option and pass a <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> object as an
+argument to it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
+
+<span class="c"># ssh myserver.com &#39;df | egrep &quot;^/dev/&quot;&#39;</span>
+<span class="k">with</span> <span class="n">sh</span><span class="o">.</span><span class="n">ssh</span><span class="p">(</span><span class="s">&quot;myserver.com&quot;</span><span class="p">,</span> <span class="n">sh</span><span class="o">.</span><span class="n">df</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">egrep</span><span class="p">(</span><span class="s">&quot;^/dev/&quot;</span><span class="p">),</span> <span class="n">_shell</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">ssh</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">ssh</span><span class="p">:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">r&quot;^(/dev/[^\s+]+)\s+(?:[^\s]+\s+){3}(\d+)%\s+(/.*)$&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">))</span>
+        <span class="n">device</span><span class="p">,</span> <span class="n">used</span><span class="p">,</span> <span class="n">mount_point</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">used</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">80</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;{0} ({1}) ran out of disk space ({2}%)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">,</span> <span class="n">used</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When <tt class="docutils literal"><span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True</span></tt> option is passed, all <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> instances that
+you specified as arguments will be converted to a shell script, which is equal
+to the passed command, and <tt class="docutils literal"><span class="pre">ssh</span></tt> will execute it on the remote side.</p>
+<p>For simple commands a generated script will be quite expectable. For example,
+<tt class="docutils literal"><span class="pre">sh.ssh(&quot;host&quot;,</span> <span class="pre">sh.echo(&quot;text&quot;,</span> <span class="pre">_stderr</span> <span class="pre">=</span> <span class="pre">psh.STDOUT),</span> <span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True)</span></tt>
+executes <tt class="docutils literal"><span class="pre">ssh</span> <span class="pre">host</span> <span class="pre">'echo</span> <span class="pre">text</span> <span class="pre">2&gt;&amp;1'</span></tt>, but for piped commands the script will
+be more complex. For example, the
+<tt class="docutils literal"><span class="pre">sh.ssh(&quot;myserver.com&quot;,</span> <span class="pre">sh.df()</span> <span class="pre">|</span> <span class="pre">sh.egrep(&quot;^/dev/&quot;),</span> <span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True)</span></tt>
+executes something like
+<tt class="docutils literal"><span class="pre">bash</span> <span class="pre">-c</span> <span class="pre">'df</span> <span class="pre">|</span> <span class="pre">egrep</span> <span class="pre">'&quot;'&quot;'^/dev/'&quot;'&quot;';</span> <span class="pre">statuses=(${PIPESTATUS[&#64;]});</span> <span class="pre">case</span> <span class="pre">${statuses[0]}</span> <span class="pre">in</span> <span class="pre">0);;</span> <span class="pre">*)</span> <span class="pre">exit</span> <span class="pre">128;;</span> <span class="pre">esac;</span> <span class="pre">exit</span> <span class="pre">${statuses[1]};'</span></tt>
+on <em>myserver.com</em> host. This complexity is required to detect errors in
+processes in the middle of the pipe.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">At this time <tt class="docutils literal"><span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True</span></tt> supports only basic I/O redirections such as
+<tt class="docutils literal"><span class="pre">&gt;&amp;2</span></tt>, <tt class="docutils literal"><span class="pre">&lt;</span> <span class="pre">file</span></tt>, <tt class="docutils literal"><span class="pre">2&gt;&amp;1</span></tt>, etc (see <a class="reference internal" href="#io-redirection"><em>I/O redirection</em></a>). Using other
+redirections causes an exception to be raised.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Please note that there is a little difference in executing</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sh</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s">&quot;data&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">grep</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">wc</span><span class="p">(</span><span class="s">&quot;-l&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ssh</span><span class="p">(</span><span class="s">&quot;host&quot;</span><span class="p">,</span> <span class="n">sh</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s">&quot;data&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">grep</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">wc</span><span class="p">(</span><span class="s">&quot;-l&quot;</span><span class="p">),</span> <span class="n">_shell</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Both commands will raise <a class="reference internal" href="reference.html#psh.ExecutionError" title="psh.ExecutionError"><tt class="xref py py-class docutils literal"><span class="pre">ExecutionError</span></tt></a>, but for the first one
+<a class="reference internal" href="reference.html#psh.ExecutionError.status" title="psh.ExecutionError.status"><tt class="xref py py-meth docutils literal"><span class="pre">ExecutionError.status()</span></tt></a> will return 1 from the failed <tt class="docutils literal"><span class="pre">grep</span></tt>
+command and for the second one <a class="reference internal" href="reference.html#psh.ExecutionError.status" title="psh.ExecutionError.status"><tt class="xref py py-meth docutils literal"><span class="pre">ExecutionError.status()</span></tt></a> will
+return 128.</p>
+<p class="last">This is because there is no way to pass a pair &#8220;failed command, return
+status code&#8221; from within ssh without making the generated script
+ridiculously complex. So all error codes of all processes in the pipe
+except the last one is converted to 128.</p>
+</div>
+</div>
+<div class="section" id="more-info">
+<h2>More info<a class="headerlink" href="#more-info" title="Permalink to this headline">¶</a></h2>
+<p>Please read the <a class="reference internal" href="reference.html#reference"><em>Module reference</em></a> which explains some important details,
+thread-safety guaranties and additional features.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">psh 0.1</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tutorial">Tutorial</a><ul>
+<li><a class="reference internal" href="#command-execution">Command execution</a></li>
+<li><a class="reference internal" href="#keyword-arguments">Keyword arguments</a></li>
+<li><a class="reference internal" href="#piping">Piping</a></li>
+<li><a class="reference internal" href="#i-o-redirection">I/O redirection</a></li>
+<li><a class="reference internal" href="#exit-codes">Exit codes</a></li>
+<li><a class="reference internal" href="#setting-default-process-options">Setting default process options</a></li>
+<li><a class="reference internal" href="#with-contexts">&#8216;With&#8217; contexts</a></li>
+<li><a class="reference internal" href="#iterating-over-output">Iterating over output</a></li>
+<li><a class="reference internal" href="#working-with-ssh">Working with SSH</a></li>
+<li><a class="reference internal" href="#more-info">More info</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="reference.html"
+                        title="previous chapter">Module reference</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Module reference"
+             >previous</a> |</li>
+        <li><a href="index.html">psh 0.1 documentation</a> &raquo;</li>
+          <li><a href="reference.html" >Module reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Dmitry Konishchev.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

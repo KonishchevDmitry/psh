@@ -19,14 +19,23 @@ class ExecutionError(Error):
     code.
     """
 
-    def __init__(self, command, status, stdout, stderr,
-        error = "Program terminated with an error status"):
-
-        super(ExecutionError, self).__init__(error)
+    def __init__(self, command, status, stdout, stderr, error = None):
         self.__command = command
         self.__status = status
         self.__stdout = stdout
         self.__stderr = stderr
+
+        if error is None:
+            try:
+                error = self.stderr().strip()
+            except UnicodeDecodeError:
+                pass
+
+            error = 'Program "{command}" terminated with an error status {status}{details}'.format(
+                command = self.command(), status = self.status(),
+                details = ": " + error if error else "")
+
+        super(ExecutionError, self).__init__(error)
 
 
     def command(self):

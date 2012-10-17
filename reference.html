@@ -131,35 +131,37 @@ instance, all its output iterators became closed.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>_defer</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if <tt class="xref py py-const docutils literal"><span class="pre">False</span></tt>, the process will be executed
+<li><strong>_defer</strong> (<em>bool</em>) &#8211; if <tt class="xref py py-const docutils literal"><span class="pre">False</span></tt>, the process will be executed
 automatically in the <a class="reference internal" href="#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> constructor (see
 <a class="reference internal" href="intro.html#command-execution"><em>Command execution</em></a>) (default is <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>)</li>
-<li><strong>_env</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a> or <tt class="xref py py-class docutils literal"><span class="pre">None</span></tt>) &#8211; overrides the process environment, if <tt class="xref py py-const docutils literal"><span class="pre">None</span></tt> does
+<li><strong>_env</strong> (<tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> or <tt class="xref py py-class docutils literal"><span class="pre">None</span></tt>) &#8211; overrides the process environment, if <tt class="xref py py-const docutils literal"><span class="pre">None</span></tt> does
 nothing (default is <tt class="xref py py-const docutils literal"><span class="pre">None</span></tt>)</li>
 <li><strong>_iter_delimiter</strong> (<tt class="xref py py-class docutils literal"><span class="pre">str</span></tt> or <tt class="xref py py-class docutils literal"><span class="pre">unicode</span></tt>) &#8211; separator which will be used as a delimiter for
 process output iteration (see <a class="reference internal" href="intro.html#output-iteration"><em>Iterating over output</em></a>) (default is
 &#8220;\n&#8221;)</li>
-<li><strong>_iter_raw</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>, output iteration will be on raw
+<li><strong>_iter_raw</strong> (<em>bool</em>) &#8211; if <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>, output iteration will be on raw
 strings instead of unicode strings (see <a class="reference internal" href="intro.html#output-iteration"><em>Iterating over output</em></a>)
 (default is <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>)</li>
 <li><strong>_ok_statuses</strong> (<em>a list of integers</em>) &#8211; a list of exit status codes that are considered as
 successful (see <a class="reference internal" href="intro.html#exit-codes"><em>Exit codes</em></a>) (default is <tt class="docutils literal"><span class="pre">[</span> <span class="pre">0</span> <span class="pre">]</span></tt>)</li>
-<li><strong>_shell</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if True, accept <a class="reference internal" href="#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> objects as command
+<li><strong>_shell</strong> (<em>bool</em>) &#8211; if True, accept <a class="reference internal" href="#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> objects as command
 arguments by translating them into a shell script (see
 <a class="reference internal" href="intro.html#working-with-ssh"><em>Working with SSH</em></a>) (default is <tt class="xref py py-const docutils literal"><span class="pre">False</span></tt>)</li>
 <li><strong>_stdin</strong> (<tt class="xref py py-class docutils literal"><span class="pre">str</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">unicode</span></tt>, <a class="reference internal" href="#psh.STDIN" title="psh.STDIN"><tt class="xref py py-const docutils literal"><span class="pre">STDIN</span></tt></a>,
-<a class="reference internal" href="#psh.File" title="psh.File"><tt class="xref py py-class docutils literal"><span class="pre">File</span></tt></a>, <a class="reference external" href="http://docs.python.org/library/collections.html#collections.Iterator" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">collections.Iterator</span></tt></a>,
-<a class="reference external" href="http://docs.python.org/library/collections.html#collections.Iterable" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">collections.Iterable</span></tt></a>) &#8211; specifies stdin redirection (see <a class="reference internal" href="intro.html#io-redirection"><em>I/O redirection</em></a>)
+<a class="reference internal" href="#psh.File" title="psh.File"><tt class="xref py py-class docutils literal"><span class="pre">File</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">collections.Iterator</span></tt>,
+<tt class="xref py py-class docutils literal"><span class="pre">collections.Iterable</span></tt>) &#8211; specifies stdin redirection (see <a class="reference internal" href="intro.html#io-redirection"><em>I/O redirection</em></a>)
 (default is <a class="reference internal" href="#psh.DEVNULL" title="psh.DEVNULL"><tt class="xref py py-data docutils literal"><span class="pre">DEVNULL</span></tt></a>)</li>
-<li><strong>_stdout</strong> (<a class="reference internal" href="#psh.File" title="psh.File"><tt class="xref py py-class docutils literal"><span class="pre">File</span></tt></a>, <a class="reference internal" href="#psh.STDOUT" title="psh.STDOUT"><tt class="xref py py-const docutils literal"><span class="pre">STDOUT</span></tt></a>, <a class="reference internal" href="#psh.STDERR" title="psh.STDERR"><tt class="xref py py-const docutils literal"><span class="pre">STDERR</span></tt></a>) &#8211; specifies stdout redirection (see <a class="reference internal" href="intro.html#io-redirection"><em>I/O redirection</em></a>)
+<li><strong>_stdout</strong> (<a class="reference internal" href="#psh.PIPE" title="psh.PIPE"><tt class="xref py py-const docutils literal"><span class="pre">PIPE</span></tt></a>, <a class="reference internal" href="#psh.File" title="psh.File"><tt class="xref py py-class docutils literal"><span class="pre">File</span></tt></a>, <a class="reference internal" href="#psh.STDOUT" title="psh.STDOUT"><tt class="xref py py-const docutils literal"><span class="pre">STDOUT</span></tt></a>,
+<a class="reference internal" href="#psh.STDERR" title="psh.STDERR"><tt class="xref py py-const docutils literal"><span class="pre">STDERR</span></tt></a>) &#8211; specifies stdout redirection (see <a class="reference internal" href="intro.html#io-redirection"><em>I/O redirection</em></a>)
 (default is <a class="reference internal" href="#psh.PIPE" title="psh.PIPE"><tt class="xref py py-const docutils literal"><span class="pre">PIPE</span></tt></a>)</li>
-<li><strong>_stderr</strong> (<a class="reference internal" href="#psh.File" title="psh.File"><tt class="xref py py-class docutils literal"><span class="pre">File</span></tt></a>, <a class="reference internal" href="#psh.STDOUT" title="psh.STDOUT"><tt class="xref py py-const docutils literal"><span class="pre">STDOUT</span></tt></a>, <a class="reference internal" href="#psh.STDERR" title="psh.STDERR"><tt class="xref py py-const docutils literal"><span class="pre">STDERR</span></tt></a>) &#8211; specifies stderr redirection (see <a class="reference internal" href="intro.html#io-redirection"><em>I/O redirection</em></a>)
+<li><strong>_stderr</strong> (<a class="reference internal" href="#psh.PIPE" title="psh.PIPE"><tt class="xref py py-const docutils literal"><span class="pre">PIPE</span></tt></a>, <a class="reference internal" href="#psh.File" title="psh.File"><tt class="xref py py-class docutils literal"><span class="pre">File</span></tt></a>, <a class="reference internal" href="#psh.STDOUT" title="psh.STDOUT"><tt class="xref py py-const docutils literal"><span class="pre">STDOUT</span></tt></a>,
+<a class="reference internal" href="#psh.STDERR" title="psh.STDERR"><tt class="xref py py-const docutils literal"><span class="pre">STDERR</span></tt></a>) &#8211; specifies stderr redirection (see <a class="reference internal" href="intro.html#io-redirection"><em>I/O redirection</em></a>)
 (default is <a class="reference internal" href="#psh.PIPE" title="psh.PIPE"><tt class="xref py py-const docutils literal"><span class="pre">PIPE</span></tt></a>)</li>
-<li><strong>_truncate_output</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if <tt class="docutils literal"><span class="pre">_wait_for_output</span> <span class="pre">=</span> <span class="pre">False</span></tt> and
+<li><strong>_truncate_output</strong> (<em>bool</em>) &#8211; if <tt class="docutils literal"><span class="pre">_wait_for_output</span> <span class="pre">=</span> <span class="pre">False</span></tt> and
 <tt class="docutils literal"><span class="pre">_truncate_output</span> <span class="pre">=</span> <span class="pre">True</span></tt>, no exception is raised by
 <a class="reference internal" href="#psh.Process.execute" title="psh.Process.execute"><tt class="xref py py-meth docutils literal"><span class="pre">execute()</span></tt></a> when there is data in stdout or stderr
 after the process termination (default is <tt class="xref py py-const docutils literal"><span class="pre">False</span></tt>)</li>
-<li><strong>_wait_for_output</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if <tt class="docutils literal"><span class="pre">_stdout</span> <span class="pre">=</span> <span class="pre">PIPE</span></tt> or <tt class="docutils literal"><span class="pre">_stderr</span> <span class="pre">=</span> <span class="pre">PIPE</span></tt> and
+<li><strong>_wait_for_output</strong> (<em>bool</em>) &#8211; if <tt class="docutils literal"><span class="pre">_stdout</span> <span class="pre">=</span> <span class="pre">PIPE</span></tt> or <tt class="docutils literal"><span class="pre">_stderr</span> <span class="pre">=</span> <span class="pre">PIPE</span></tt> and
 <tt class="docutils literal"><span class="pre">_wait_for_output</span> <span class="pre">=</span> <span class="pre">True</span></tt>, <a class="reference internal" href="#psh.Process.execute" title="psh.Process.execute"><tt class="xref py py-meth docutils literal"><span class="pre">execute()</span></tt></a> and
 <a class="reference internal" href="#psh.Process.wait" title="psh.Process.wait"><tt class="xref py py-meth docutils literal"><span class="pre">wait()</span></tt></a> returns only when EOF is gotten on this
 pipes (attention: output iterators always read all data from stdout)
@@ -222,7 +224,7 @@ created).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wait</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>, calls <tt class="docutils literal"><span class="pre">wait(check_status</span> <span class="pre">=</span>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wait</strong> (<em>bool</em>) &#8211; if <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>, calls <tt class="docutils literal"><span class="pre">wait(check_status</span> <span class="pre">=</span>
 <span class="pre">check_status)</span></tt> after process execution.</td>
 </tr>
 </tbody>
@@ -237,7 +239,7 @@ created).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>signal</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; signal which will be used to kill the process.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>signal</strong> (<em>int</em>) &#8211; signal which will be used to kill the process.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><tt class="xref py py-const docutils literal"><span class="pre">True</span></tt> if the process received the signal (which
 indicates that it&#8217;s still running).</td>
@@ -291,10 +293,10 @@ indicates that it&#8217;s still running).</td>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>check_status</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>, check the process status
+<li><strong>check_status</strong> (<em>bool</em>) &#8211; if <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>, check the process status
 code (see <a class="reference internal" href="intro.html#exit-codes"><em>Exit codes</em></a>) and other (communication) errors and
 raise an exception if any error occurred.</li>
-<li><strong>kill</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; if is not <tt class="xref py py-const docutils literal"><span class="pre">None</span></tt>, kills the process with the
+<li><strong>kill</strong> (<em>int</em>) &#8211; if is not <tt class="xref py py-const docutils literal"><span class="pre">None</span></tt>, kills the process with the
 <tt class="docutils literal"><span class="pre">kill(signal</span> <span class="pre">=</span> <span class="pre">kill)</span></tt> and waits for its termination.</li>
 </ul>
 </td>
@@ -342,7 +344,7 @@ to stderr.</p>
 
 <dl class="data">
 <dt id="psh.DEVNULL">
-<tt class="descclassname">psh.</tt><tt class="descname">DEVNULL</tt><em class="property"> = &lt;psh.process.File object at 0x10eedc990&gt;</em><a class="headerlink" href="#psh.DEVNULL" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">psh.</tt><tt class="descname">DEVNULL</tt><em class="property"> = &lt;psh.process.File object at 0x103055b50&gt;</em><a class="headerlink" href="#psh.DEVNULL" title="Permalink to this definition">¶</a></dt>
 <dd><p>A value to configure redirection of stdin/stdout/stderr from/to /dev/null.</p>
 </dd></dl>
 
@@ -357,13 +359,13 @@ to stderr.</p>
 
 <dl class="exception">
 <dt id="psh.ExecutionError">
-<em class="property">exception </em><tt class="descclassname">psh.</tt><tt class="descname">ExecutionError</tt><big>(</big><em>command</em>, <em>status</em>, <em>stdout</em>, <em>stderr</em>, <em>error=u'Program terminated with an error status'</em><big>)</big><a class="headerlink" href="#psh.ExecutionError" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><tt class="descclassname">psh.</tt><tt class="descname">ExecutionError</tt><big>(</big><em>command</em>, <em>status</em>, <em>stdout</em>, <em>stderr</em>, <em>error=None</em><big>)</big><a class="headerlink" href="#psh.ExecutionError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Raised when a command fails to execute or returns an error exit status
 code.</p>
 <dl class="method">
 <dt id="psh.ExecutionError.command">
 <tt class="descname">command</tt><big>(</big><big>)</big><a class="headerlink" href="#psh.ExecutionError.command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the process command string.</p>
+<dd><p>Returns the command string.</p>
 </dd></dl>
 
 <dl class="method">

@@ -6,8 +6,8 @@ psh |version|
 
 `psh <https://github.com/KonishchevDmitry/psh>`_ allows you to spawn processes
 in Unix shell-style way. It is inspired by `sh
-<http://amoffat.github.com/sh/>`_ module but has fully different implementation
-and API.
+<http://amoffat.github.com/sh/>`_ module but has a fully different
+implementation and API.
 
 Unix shell is very convenient for spawning processes, connecting them into
 pipes, etc., but it has a very limited language which is often not suitable for

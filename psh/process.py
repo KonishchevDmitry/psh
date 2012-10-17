@@ -136,18 +136,20 @@ class Process:
     :keyword _stdin: specifies stdin redirection (see :ref:`io-redirection`)
         (default is :py:data:`DEVNULL`)
     :type _stdin: :py:class:`str`, :py:class:`unicode`, :py:const:`STDIN`,
-                  :py:class:`File`, :py:class:`collections.Iterator`,
-                  :py:class:`collections.Iterable`
+        :py:class:`File`, :py:class:`collections.Iterator`,
+        :py:class:`collections.Iterable`
 
 
     :keyword _stdout: specifies stdout redirection (see :ref:`io-redirection`)
         (default is :py:const:`PIPE`)
-    :type _stdout: :py:class:`File`, :py:const:`STDOUT`, :py:const:`STDERR`
+    :type _stdout: :py:const:`PIPE`, :py:class:`File`, :py:const:`STDOUT`,
+        :py:const:`STDERR`
 
 
     :keyword _stderr: specifies stderr redirection (see :ref:`io-redirection`)
         (default is :py:const:`PIPE`)
-    :type _stderr: :py:class:`File`, :py:const:`STDOUT`, :py:const:`STDERR`
+    :type _stderr: :py:const:`PIPE`, :py:class:`File`, :py:const:`STDOUT`,
+        :py:const:`STDERR`
 
 
     :keyword _truncate_output: if ``_wait_for_output = False`` and

@@ -1,11 +1,11 @@
-psh allows you to spawn processes in the Unix shell-style way.
+psh allows you to spawn processes in Unix shell-style way.
 
 Unix shell is very convenient for spawning processes, connecting them into
-pipes, etc., but it has a very limited language which is often not suitable for
-writing complex programs. Python is a very flexible and reach language which is
-used in a wide variety of application domains, but its standard subprocess
-module is very limited. psh combines the power of Python language and an
-elegant shell-style way to execute processes.
+pipes, etc., but it has a very limited language which is often not suitable
+for writing complex programs. Python is a very flexible and reach language
+which is used in a wide variety of application domains, but its standard
+subprocess module is very limited. psh combines the power of Python language
+and an elegant shell-style way to execute processes.
 
 
 Examples
@@ -47,7 +47,7 @@ Output::
     /dev/sda2 (/mnt/data) ran out of disk space (95%)
 
 
-Complete documentation
-----------------------
+Documentation
+-------------
 
-http://konishchevdmitry.github.com/psh/
+Complete documentation is available at http://konishchevdmitry.github.com/psh/

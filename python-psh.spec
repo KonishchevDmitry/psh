@@ -13,9 +13,8 @@ Summary: Process management library
 
 Group:   Development/Languages
 License: GPLv3
-URL:     https://github.com/KonishchevDmitry/psh
+URL:     http://konishchevdmitry.github.com/psh/
 Source0: psh.tar.gz
-#Source0: http://pypi.python.org/packages/source/p/psh/psh-%{version}.zip
 
 BuildArch:     noarch
 BuildRequires: python-setuptools
@@ -27,7 +26,7 @@ BuildRequires: make, python-sphinx
 %endif
 
 %description
-psh allows you to spawn processes in the Unix shell-style way.
+psh allows you to spawn processes in Unix shell-style way.
 
 Unix shell is very convenient for spawning processes, connecting them into
 pipes, etc., but it has a very limited language which is often not suitable

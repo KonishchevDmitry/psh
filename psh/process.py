@@ -127,6 +127,11 @@ class Process:
     :type _ok_statuses: a list of integers
 
 
+    :keyword _on_execute: if is not :py:const:`None`, the object is called
+        before the process execution (default is :py:const:`None`)
+    :type _on_execute: a callable object
+
+
     :keyword _shell: if True, accept :py:class:`Process` objects as command
         arguments by translating them into a shell script (see
         :ref:`working-with-ssh`) (default is :py:const:`False`)
@@ -167,6 +172,7 @@ class Process:
     :type _wait_for_output: bool
     """
 
+
     __stdin_source = None
     """The process' stdin source (another process, string, etc.)."""
 
@@ -202,6 +208,10 @@ class Process:
 
     __iter_delimiter = b"\n"
     """See _iter_delimiter option description."""
+
+
+    __on_execute = None
+    """See _on_execute option description."""
 
 
     __error = None
@@ -525,6 +535,9 @@ class Process:
 
     def _execute(self, stdout = None, check_pipes = True):
         """Executes the command."""
+
+        if self.__on_execute is not None:
+            self.__on_execute(self)
 
         with self.__lock:
             if self.__state != _PROCESS_STATE_PENDING:
@@ -1087,8 +1100,8 @@ class Process:
         """Parses command arguments and options."""
 
         # Process options -->
-        def check_arg(option, value, types = tuple(), values = tuple()):
-            if not isinstance(value, types) and value not in values:
+        def check_arg(option, value, types = tuple(), values = tuple(), check = lambda value: False):
+            if not isinstance(value, types) and value not in values and not check(value):
                 raise InvalidArgument("Invalid value for option {0}", option)
 
             return value
@@ -1116,6 +1129,8 @@ class Process:
                 self.__iter_raw = check_arg(option, value, bool)
             elif option == "_ok_statuses":
                 self.__ok_statuses = [ check_arg(option, status, int) for status in value ]
+            elif option == "_on_execute":
+                self.__on_execute = check_arg(option, value, check = callable)
             elif option == "_shell":
                 self.__shell = check_arg(option, value, bool)
             elif option == "_stderr":

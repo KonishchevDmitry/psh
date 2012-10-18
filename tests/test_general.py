@@ -222,3 +222,47 @@ def test_sh_customization(test):
 
     csh = psh.Sh(_defer = False)
     assert csh.true().status() == 0
+
+
+
+def test_on_execute(test):
+    """Tests _on_execute option."""
+
+    state = { "executed": False }
+
+    def func(process):
+        state["executed"] = True
+
+    process = sh.true(_on_execute = func)
+    assert state["executed"] == False
+
+    process.execute()
+    assert state["executed"] == True
+
+
+
+def test_on_execute_with_exeption(test):
+    """Tests _on_execute option with function that throws an exception."""
+
+    allow = False
+    state = { "executed": False }
+
+    class NotAllowed(Exception):
+        pass
+
+    def func(process):
+        if allow:
+            state["executed"] = True
+        else:
+            raise NotAllowed()
+
+    process = sh.true(_on_execute = func)
+    assert state["executed"] == False
+
+    with pytest.raises(NotAllowed):
+        process.execute()
+    assert state["executed"] == False
+
+    allow = True
+    process.execute()
+    assert state["executed"] == True

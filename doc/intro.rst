@@ -50,6 +50,13 @@ Output::
     /dev/sda2 (/mnt/data) ran out of disk space (95%)
 
 
+Python versions
+---------------
+
+Currently only Python 2.6+ is supported. Python 3 support will be added in the
+future releases.
+
+
 Installation
 ------------
 
@@ -58,7 +65,6 @@ You can install psh by executing the following commands::
     git clone https://github.com/KonishchevDmitry/psh.git && cd psh
     python setup.py build
     sudo python setup.py install
-
 
 
 

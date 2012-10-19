@@ -1,2 +1,4 @@
-/doc/_build
 /.vim
+/doc/_build
+/psh.egg-info
+/test-env

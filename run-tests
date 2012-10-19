@@ -1,0 +1,20 @@
+#!/bin/sh -e
+#
+# Runs tests on several Python versions
+#
+
+test_env_path="test-env"
+python_versions="2"
+
+mkdir -p "$test_env_path"
+
+for version in $python_versions; do
+    version_env_path="$test_env_path/python$version"
+
+    if [ ! -e "$version_env_path" ]; then
+        virtualenv --python python$version --distribute "$version_env_path" && \
+            "$version_env_path/bin/pip" install pytest || { rm -rf "$version_env_path"; false; }
+    fi
+
+    "$version_env_path/bin/python" setup.py test
+done

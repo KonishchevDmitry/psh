@@ -39,7 +39,7 @@ Check free disk space on remote host *myserver.com*::
     # ssh myserver.com 'df | egrep "^/dev/"'
     with sh.ssh("myserver.com", sh.df() | sh.egrep("^/dev/"), _shell = True) as ssh:
         for line in ssh:
-            match = re.search(r"^(/dev/[^\s+]+)\s+(?:[^\s]+\s+){3}(\d+)%\s+(/.*)$", line.rstrip("\n"))
+            match = re.search(r"^(/dev/[^\s]+)\s+(?:[^\s]+\s+){3}(\d+)%\s+(/.*)$", line.rstrip("\n"))
             device, used, mount_point = match.groups()
             if int(used) > 80:
                 print "{0} ({1}) ran out of disk space ({2}%)".format(device, mount_point, used)
@@ -50,6 +50,13 @@ Output::
     /dev/sda2 (/mnt/data) ran out of disk space (95%)
 
 
+Python versions
+---------------
+
+Currently only Python 2.6+ is supported. Python 3 support will be added in the
+future releases.
+
+
 Installation
 ------------
 
@@ -58,7 +65,6 @@ You can install psh by executing the following commands::
     git clone https://github.com/KonishchevDmitry/psh.git && cd psh
     python setup.py build
     sudo python setup.py install
-
 
 
 

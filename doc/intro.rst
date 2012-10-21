@@ -39,7 +39,7 @@ Check free disk space on remote host *myserver.com*::
     # ssh myserver.com 'df | egrep "^/dev/"'
     with sh.ssh("myserver.com", sh.df() | sh.egrep("^/dev/"), _shell = True) as ssh:
         for line in ssh:
-            match = re.search(r"^(/dev/[^\s+]+)\s+(?:[^\s]+\s+){3}(\d+)%\s+(/.*)$", line.rstrip("\n"))
+            match = re.search(r"^(/dev/[^\s]+)\s+(?:[^\s]+\s+){3}(\d+)%\s+(/.*)$", line.rstrip("\n"))
             device, used, mount_point = match.groups()
             if int(used) > 80:
                 print "{0} ({1}) ran out of disk space ({2}%)".format(device, mount_point, used)

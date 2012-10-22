@@ -6,7 +6,10 @@ from __future__ import unicode_literals
 
 import pytest
 
+from pcore import bytes, str
+
 import psh
+import psys
 from psh import sh
 
 import test
@@ -27,7 +30,7 @@ def test_output_iteration(test):
     assert stdout == [ "aaa\n", "тест\n", "bbb" ]
 
     for line in stdout:
-        assert type(line) == unicode
+        assert type(line) == str
 
 
 def test_output_iteration_with_large_data(test):
@@ -53,7 +56,7 @@ def test_output_iteration_with_raw_false(test):
     assert stdout == [ "aaa\n", "тест\n", "bbb" ]
 
     for line in stdout:
-        assert type(line) == unicode
+        assert type(line) == str
 
 
 def test_output_iteration_with_raw_true(test):
@@ -62,10 +65,10 @@ def test_output_iteration_with_raw_true(test):
     with sh.cat(_stdin = "aaa\nтест\nbbb", _iter_raw = True) as process:
         stdout = [ line for line in process ]
 
-    assert stdout == [ b"aaa\n", b"тест\n", b"bbb" ]
+    assert stdout == [ b"aaa\n", psys.b("тест\n"), b"bbb" ]
 
     for line in stdout:
-        assert type(line) == str
+        assert type(line) == bytes
 
 
 def test_output_iteration_option_delimiter(test):
@@ -80,7 +83,7 @@ def test_output_iteration_option_delimiter(test):
 def test_output_iteration_without_delimiter_raw(test):
     """Tests iteration over process' output without delimiter (raw)."""
 
-    with open("/dev/urandom") as random:
+    with open("/dev/urandom", "rb") as random:
         stdin = random.read(1024 * 1024)
 
     with sh.cat(_stdin = stdin, _iter_delimiter = "", _iter_raw = True) as process:
@@ -110,7 +113,7 @@ def test_output_iterator_misusing(test):
 
     with sh.cat(_stdin = "aaa\nbbb\nccc") as process:
         output = iter(process)
-        output.next()
+        next(output)
 
     with pytest.raises(psh.InvalidOperation):
-        output.next()
+        next(output)

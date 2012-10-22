@@ -7,8 +7,8 @@ from __future__ import unicode_literals
 import logging
 import tempfile
 
-from psh import sh
-from psh import File, STDOUT, STDERR, DEVNULL
+import psys
+from psh import sh, File, STDOUT, STDERR, DEVNULL
 
 import test
 test.init(globals())
@@ -37,7 +37,7 @@ def test_stdin_from_file(test, capfd):
 
     try:
         with tempfile.NamedTemporaryFile() as temp_file:
-            temp_file.write(b"test\nтест")
+            temp_file.write(psys.b("test\nтест"))
             temp_file.flush()
 
             process = sh.tr("t", "z", _stdin = File(temp_file.name)).execute()
@@ -165,7 +165,7 @@ def test_stdout_to_file_and_stderr_to_dev_null(test, capfd):
             assert stdout == ""
             assert stderr == ""
 
-            assert temp_file.read() == b"test1\nтест3\n"
+            assert temp_file.read() == psys.b("test1\nтест3\n")
     finally:
         logging.disable(logging.NOTSET)
 
@@ -188,7 +188,7 @@ def test_stdout_to_dev_null_and_stderr_to_file(test, capfd):
             assert stdout == ""
             assert stderr == ""
 
-            assert temp_file.read() == b"test2\nтест4\n"
+            assert temp_file.read() == psys.b("test2\nтест4\n")
     finally:
         logging.disable(logging.NOTSET)
 
@@ -200,7 +200,7 @@ def test_stdout_to_file_with_append(test, capfd):
 
     try:
         with tempfile.NamedTemporaryFile() as temp_file:
-            temp_file.write("orig\n")
+            temp_file.write(b"orig\n")
             temp_file.flush()
 
             process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;",
@@ -215,7 +215,7 @@ def test_stdout_to_file_with_append(test, capfd):
             assert stderr == ""
 
             with open(temp_file.name) as stdout:
-                assert stdout.read() == b"orig\ntest1\nтест3\n"
+                assert psys.u(stdout.read()) == "orig\ntest1\nтест3\n"
     finally:
         logging.disable(logging.NOTSET)
 
@@ -227,7 +227,7 @@ def test_stderr_to_file_with_append(test, capfd):
 
     try:
         with tempfile.NamedTemporaryFile() as temp_file:
-            temp_file.write("orig\n")
+            temp_file.write(b"orig\n")
             temp_file.flush()
 
             process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;",
@@ -242,6 +242,6 @@ def test_stderr_to_file_with_append(test, capfd):
             assert stderr == ""
 
             with open(temp_file.name) as stderr:
-                assert stderr.read() == b"orig\ntest2\nтест4\n"
+                assert psys.u(stderr.read()) == "orig\ntest2\nтест4\n"
     finally:
         logging.disable(logging.NOTSET)

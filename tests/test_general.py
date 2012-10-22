@@ -10,7 +10,10 @@ import time
 import pytest
 
 import psh
+import psys
+
 from psh import sh
+from pcore import bytes, str
 
 import test
 test.init(globals())
@@ -21,55 +24,55 @@ def test_command_arguments(test):
 
     process = sh.test()
     assert process.command() == [ "test" ]
-    assert unicode(process) == "test"
-    assert str(process) == unicode(process).encode("utf-8")
+    assert str(process) == "test"
+    assert bytes(process) == psys.b(str(process))
 
     process = sh.complex_command_name()
     assert process.command() == [ "complex-command-name" ]
-    assert unicode(process) == "complex-command-name"
-    assert str(process) == unicode(process).encode("utf-8")
+    assert str(process) == "complex-command-name"
+    assert bytes(process) == psys.b(str(process))
 
     process = sh("complex command name")("arg1", "arg2")
     assert process.command() == [ "complex command name", "arg1", "arg2" ]
-    assert unicode(process) == "'complex command name' arg1 arg2"
-    assert str(process) == unicode(process).encode("utf-8")
+    assert str(process) == "'complex command name' arg1 arg2"
+    assert bytes(process) == psys.b(str(process))
 
     process = sh.test(
-        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', b"тест", b"тест тест",
+        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', psys.b("тест"), psys.b("тест тест"),
         "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
         3, 2 ** 128, 2.0
     )
     assert process.command() == [ "test",
-        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', b"тест", b"тест тест",
+        b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', psys.b("тест"), psys.b("тест тест"),
         "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
         "3", "340282366920938463463374607431768211456", "2.0"
     ]
-    assert unicode(process) == ("test "
+    assert str(process) == ("test "
         r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' "quote'arg" 'quote"arg' \xd1\x82\xd0\xb5\xd1\x81\xd1\x82 '\xd1\x82\xd0\xb5\xd1\x81\xd1\x82 \xd1\x82\xd0\xb5\xd1\x81\xd1\x82' """
         r"""arg 'space arg' 'carriage\rline' 'line\narg' 'tab\targ' 'slash\\arg' 'quote\'arg' 'quote"arg' тест 'тест тест' """
         "3 340282366920938463463374607431768211456 2.0"
     )
-    assert str(process) == unicode(process).encode("utf-8")
+    assert bytes(process) == psys.b(str(process))
 
     process = sh.test("space arg", s = "short_arg")
     assert process.command() == [ "test", "-s", "short_arg", "space arg" ]
-    assert unicode(process) == "test -s short_arg 'space arg'"
-    assert str(process) == unicode(process).encode("utf-8")
+    assert str(process) == "test -s short_arg 'space arg'"
+    assert bytes(process) == psys.b(str(process))
 
     process = sh.test("arg", long_long_arg = "long arg")
     assert process.command() == [ "test", "--long-long-arg", "long arg", "arg" ]
-    assert unicode(process) == "test --long-long-arg 'long arg' arg"
-    assert str(process) == unicode(process).encode("utf-8")
+    assert str(process) == "test --long-long-arg 'long arg' arg"
+    assert bytes(process) == psys.b(str(process))
 
     process = sh.test("arg", bool_arg = True)
     assert process.command() == [ "test", "--bool-arg", "arg" ]
-    assert unicode(process) == "test --bool-arg arg"
-    assert str(process) == unicode(process).encode("utf-8")
+    assert str(process) == "test --bool-arg arg"
+    assert bytes(process) == psys.b(str(process))
 
     process = sh.test("arg", bool_arg = False)
     assert process.command() == [ "test", "arg" ]
-    assert unicode(process) == "test arg"
-    assert str(process) == unicode(process).encode("utf-8")
+    assert str(process) == "test arg"
+    assert bytes(process) == psys.b(str(process))
 
 
 def test_invalid_command_arguments(test):
@@ -103,7 +106,7 @@ def test_pid(test):
     with pytest.raises(psh.InvalidProcessState):
         process.pid()
 
-    assert process.execute().stdout().strip() == unicode(process.pid())
+    assert process.execute().stdout().strip() == str(process.pid())
 
 
 

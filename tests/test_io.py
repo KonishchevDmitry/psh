@@ -8,7 +8,10 @@ import tempfile
 
 import pytest
 
+from pcore import bytes, str
+
 import psh
+import psys
 from psh import sh
 
 import test
@@ -19,16 +22,16 @@ def test_string_input(test):
     """Tests process input from string."""
 
     assert sh.grep("тест", _stdin = "aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
-    assert sh.grep("тест", _stdin = b"aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
+    assert sh.grep("тест", _stdin = psys.b("aaa\nтест\nbbb\n")).execute().stdout() == "тест\n"
 
 
 def test_iterator_input(test):
     """Tests process input from string."""
 
-    stdout = "\n".join(str(i) for i in xrange(0, 10))
+    stdout = "\n".join(str(i) for i in range(0, 10))
 
     def func():
-        for i in xrange(0, 10):
+        for i in range(0, 10):
             yield "\n" + str(i) if i else str(i)
 
     assert sh.cat(_stdin = func()).execute().stdout() == stdout
@@ -38,13 +41,13 @@ def test_file_object_input(test):
     """Tests process input from file object."""
 
     with tempfile.NamedTemporaryFile() as temp_file:
-        with open("/dev/urandom") as random:
+        with open("/dev/urandom", "rb") as random:
             stdout = random.read(1024 * 1024)
 
         temp_file.write(stdout)
         temp_file.flush()
 
-        with open(temp_file.name) as stdin:
+        with open(temp_file.name, "rb") as stdin:
             assert sh.cat(_stdin = stdin).execute().raw_stdout() == stdout
 
 
@@ -81,7 +84,7 @@ def test_large_output(test):
     stdout_tempfile = None
     stderr_tempfile = None
 
-    with open("/dev/urandom") as random:
+    with open("/dev/urandom", "rb") as random:
         stdout = random.read(1024 * 1024)
         stderr = random.read(1024 * 1024 + 1)
 
@@ -133,13 +136,13 @@ def _check_output(obj, valid_stdout, valid_stderr):
     """Checks a program output."""
 
     stdout = obj.stdout()
-    assert type(stdout) == unicode and stdout == valid_stdout
+    assert type(stdout) == str and stdout == valid_stdout
 
     stderr = obj.stderr()
-    assert type(stderr) == unicode and stderr == valid_stderr
+    assert type(stderr) == str and stderr == valid_stderr
 
     raw_stdout = obj.raw_stdout()
-    assert type(raw_stdout) == str and raw_stdout == valid_stdout.encode("utf-8")
+    assert type(raw_stdout) == bytes and raw_stdout == psys.b(valid_stdout)
 
     raw_stderr = obj.raw_stderr()
-    assert type(raw_stderr) == str and raw_stderr == valid_stderr.encode("utf-8")
+    assert type(raw_stderr) == bytes and raw_stderr == psys.b(valid_stderr)

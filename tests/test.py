@@ -10,6 +10,7 @@ import re
 import subprocess
 import threading
 
+import psys
 import psh
 
 
@@ -32,7 +33,7 @@ def check_leaks(request):
             [ "ps", "-A", "-o", "ppid=,pid=,command=" ],
             stdout = subprocess.PIPE)
 
-        stdout, stderr = process.communicate()
+        stdout = psys.u(process.communicate()[0])
         assert not process.returncode
         assert stdout
 

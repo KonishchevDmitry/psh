@@ -1,8 +1,9 @@
 """Controls process execution."""
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
-import cStringIO
+from pcore import PY3
+
 import collections
 import errno
 import fcntl
@@ -14,6 +15,15 @@ import sys
 import threading
 import time
 import weakref
+
+if PY3:
+    from io import BytesIO
+    BytesIO = BytesIO # To suppress pyflakes warnings
+else:
+    from cStringIO import StringIO as BytesIO
+    BytesIO = BytesIO # To suppress pyflakes warnings
+
+from pcore import bytes, str
 
 import psys
 import psys.poll
@@ -256,10 +266,10 @@ class Process:
         self.__pid = None
 
         # Process' stdout
-        self.__stdout = cStringIO.StringIO()
+        self.__stdout = BytesIO()
 
         # Process' stderr
-        self.__stderr = cStringIO.StringIO()
+        self.__stderr = BytesIO()
 
         # Process' termination status
         self.__status = None
@@ -341,58 +351,6 @@ class Process:
             raise
 
         return process
-
-
-    def __str__(self):
-        """Returns the command string.
-
-        .. note::
-            Very lazy formatting.
-        """
-
-        return psys.b(self.__unicode__())
-
-
-    def __unicode__(self):
-        """Returns the command string.
-
-        .. note::
-            Very lazy formatting.
-        """
-
-        command = ""
-
-        for arg in self.__command:
-            if command:
-                command += " "
-
-            if type(arg) == str:
-                for c in b""" '"\\\r\n\t""":
-                    if c in arg:
-                        arg = repr(arg)
-                        break
-                else:
-                    arg = repr(arg)[1:-1]
-
-                command += psys.u(arg)
-            else:
-                for c in b""" '"\\\r\n\t""":
-                    if c in arg:
-                        for replacement in (
-                            ( b"\\", br"\\" ),
-                            ( b"'",  br"\'" ),
-                            ( b"\r", br"\r" ),
-                            ( b"\n", br"\n" ),
-                            ( b"\t", br"\t" ),
-                        ):
-                            arg = arg.replace(*replacement)
-
-                        arg = "'" + arg + "'"
-                        break
-
-                command += arg
-
-        return command
 
 
     def command(self):
@@ -527,7 +485,7 @@ class Process:
                 raise self.__error
 
             if self.__status not in self.__ok_statuses:
-                raise ExecutionError(unicode(self),
+                raise ExecutionError(str(self),
                     self.__status, self.raw_stdout(), self.raw_stderr())
 
         return self.__status
@@ -591,7 +549,7 @@ class Process:
             arg = psys.b(arg)
 
             if simple_arg_re.search(arg) is None:
-                stream.write(b"'" + arg.replace(b"'", """'"'"'""") + b"'")
+                stream.write(b"'" + arg.replace(b"'", b"""'"'"'""") + b"'")
             else:
                 stream.write(arg)
 
@@ -601,7 +559,7 @@ class Process:
         # (we can't use lock here to prevent deadlocking)
         if isinstance(stdin_source, Process):
             stdin_source._shell_command(stream, pipe_ok_statuses)
-            stream.write(" | ")
+            stream.write(b" | ")
 
         with self.__lock:
             # Just in case. Actually, at this time we don't need to lock and
@@ -615,16 +573,19 @@ class Process:
             # Command arguments
             for arg_id, arg in enumerate(self.__command):
                 if arg_id:
-                    stream.write(" ")
+                    stream.write(b" ")
                 write_arg(stream, arg)
 
             # Stdin redirection
             if isinstance(stdin_source, File):
-                stream.write(" < ")
+                stream.write(b" < ")
                 write_arg(stream, stdin_source.path)
             elif stdin_source in ( None, STDIN ) or isinstance(stdin_source, Process):
                 pass
-            elif isinstance(stdin_source, ( basestring, collections.Iterator, collections.Iterable )):
+            elif (
+                type(stdin_source) in ( bytes, str ) or
+                isinstance(stdin_source, ( collections.Iterator, collections.Iterable ))
+            ):
                 raise InvalidOperation(
                     "String and iterator input is not supported for serialization to a shell script")
             else:
@@ -634,9 +595,9 @@ class Process:
             if self.__piped_to_process() or self.__stdout_target in ( STDOUT, PIPE ):
                 pass
             elif self.__stdout_target is STDERR:
-                stream.write(" >&2")
+                stream.write(b" >&2")
             elif isinstance(self.__stdout_target, File):
-                stream.write(" > ")
+                stream.write(b" > ")
                 write_arg(stream, self.__stdout_target.path)
             else:
                 raise LogicalError()
@@ -645,9 +606,9 @@ class Process:
             if self.__stderr_target in ( STDERR, PIPE ):
                 pass
             elif self.__stderr_target is STDOUT:
-                stream.write(" 2>&1")
+                stream.write(b" 2>&1")
             elif isinstance(self.__stderr_target, File):
-                stream.write(" 2> ")
+                stream.write(b" 2> ")
                 write_arg(stream, self.__stderr_target.path)
             else:
                 raise LogicalError()
@@ -661,7 +622,7 @@ class Process:
         including handling of errors in the middle of the process pipe.
         """
 
-        command = cStringIO.StringIO()
+        command = BytesIO()
 
         pipe_ok_statuses = []
         self._shell_command(command, pipe_ok_statuses)
@@ -669,18 +630,18 @@ class Process:
         if len(pipe_ok_statuses) == 1:
             return command.getvalue()
 
-        command.write("; statuses=(${PIPESTATUS[@]});")
+        command.write(b"; statuses=(${PIPESTATUS[@]});")
 
         for process_id, ok_statuses in enumerate(pipe_ok_statuses):
             if process_id == len(pipe_ok_statuses) - 1:
-                command.write(" exit ${{statuses[{0}]}};".format(process_id))
+                command.write(psys.b(" exit ${{statuses[{0}]}};".format(process_id)))
             else:
-                command.write(" case ${{statuses[{0}]}} in".format(process_id))
+                command.write(psys.b(" case ${{statuses[{0}]}} in".format(process_id)))
                 if ok_statuses:
-                    command.write(" {0});;".format("|".join(str(status) for status in ok_statuses)))
-                command.write(" *) exit 128;; esac;".format(process_id))
+                    command.write(psys.b(" {0});;".format("|".join(str(status) for status in ok_statuses))))
+                command.write(b" *) exit 128;; esac;")
 
-        return b"bash -c '" + command.getvalue().replace(b"'", """'"'"'""") + b"'"
+        return b"bash -c '" + command.getvalue().replace(b"'", b"""'"'"'""") + b"'"
 
 
     def _state(self):
@@ -708,7 +669,7 @@ class Process:
                     try:
                         if write:
                             file_fd = eintr_retry(os.open)(
-                                path, os.O_WRONLY | os.O_CREAT | ( os.O_APPEND if append else 0 ), 0666)
+                                path, os.O_WRONLY | os.O_CREAT | ( os.O_APPEND if append else 0 ), 0o666)
                         else:
                             file_fd = eintr_retry(os.open)(path, os.O_RDONLY)
 
@@ -771,8 +732,8 @@ class Process:
                 if exec_error and isinstance(e, EnvironmentError) and e.errno == errno.EACCES:
                     exit_code = 126
 
-                print >> sys.stderr, "Failed to execute '{program}': {error}.".format(
-                    program = self.__program, error = psys.e(e))
+                print("Failed to execute '{program}': {error}.".format(
+                    program = self.__program, error = psys.e(e)), file = sys.stderr)
         finally:
             os._exit(exit_code)
 
@@ -847,10 +808,10 @@ class Process:
                             stdin = next(self.__stdin_generator)
 
                             try:
-                                if isinstance(stdin, unicode):
-                                    stdin = psys.b(stdin)
-                                elif not isinstance(stdin, str):
-                                    raise ValueError("must be a string")
+                                if type(stdin) not in ( bytes, str ):
+                                    raise TypeError("must be a string")
+
+                                stdin = psys.b(stdin)
                             except Exception as e:
                                 raise InvalidArgument("Invalid stdin data: {0}", e)
                         except StopIteration:
@@ -919,7 +880,7 @@ class Process:
 
                             if not self.__truncate_output:
                                 self.__error = ProcessOutputWasTruncated(
-                                    unicode(self), self.__status,
+                                    str(self), self.__status,
                                     self.__stdout.getvalue(), self.__stderr.getvalue())
 
                             break
@@ -976,7 +937,7 @@ class Process:
             self.__stdin_source._execute(
                 stdout = pipe, check_pipes = False)
         else:
-            if isinstance(self.__stdin_source, basestring):
+            if type(self.__stdin_source) in ( bytes, str ):
                 self.__stdin_generator = iter([ self.__stdin_source ])
             elif isinstance(self.__stdin_source, collections.Iterator):
                 self.__stdin_generator = self.__stdin_source
@@ -1100,53 +1061,60 @@ class Process:
         """Parses command arguments and options."""
 
         # Process options -->
-        def check_arg(option, value, types = tuple(), values = tuple(), check = lambda value: False):
-            if not isinstance(value, types) and value not in values and not check(value):
+        def check_arg(
+            option, value, types = tuple(), instance_of = tuple(),
+            values = tuple(), check = lambda value: False
+        ):
+            if (
+                type(value) not in types and not isinstance(value, instance_of) and
+                value not in values and not check(value)
+            ):
                 raise InvalidArgument("Invalid value for option {0}", option)
 
             return value
 
-        for option, value in options.iteritems():
+        for option, value in options.items():
             if not option.startswith("_"):
                 continue
 
             if option == "_defer":
-                check_arg(option, value, bool)
-                self.__defer = value
+                self.__defer = check_arg(option, value, types = ( bool, ))
             elif option == "_env":
                 if value is None:
                     self.__env = value
                 else:
                     self.__env = dict(
-                        ( psys.b(check_arg(option, k, basestring)), psys.b(check_arg(option, v, basestring)) )
-                            for k, v in value.iteritems() )
+                        (
+                            psys.b(check_arg(option, k, types = ( bytes, str ))),
+                            psys.b(check_arg(option, v, types = ( bytes, str )))
+                        )
+                            for k, v in value.items() )
             elif option == "_iter_delimiter":
-                check_arg(option, value, basestring)
-                if isinstance(value, unicode):
-                    value = psys.b(value)
-                self.__iter_delimiter = value
+                self.__iter_delimiter = psys.b(
+                    check_arg(option, value, types = ( bytes, str )))
             elif option == "_iter_raw":
-                self.__iter_raw = check_arg(option, value, bool)
+                self.__iter_raw = check_arg(option, value, types = ( bool, ))
             elif option == "_ok_statuses":
-                self.__ok_statuses = [ check_arg(option, status, int) for status in value ]
+                self.__ok_statuses = [
+                    check_arg(option, status, types = ( int, )) for status in value ]
             elif option == "_on_execute":
                 self.__on_execute = check_arg(option, value, check = callable)
             elif option == "_shell":
-                self.__shell = check_arg(option, value, bool)
+                self.__shell = check_arg(option, value, types = ( bool, ))
             elif option == "_stderr":
                 self.__stderr_target = check_arg(
-                    option, value, types = File, values = ( STDOUT, STDERR, PIPE ))
+                    option, value, instance_of = File, values = ( STDOUT, STDERR, PIPE ))
             elif option == "_stdin":
-                self.__stdin_source = check_arg(option, value,
-                    types = ( str, unicode, File, collections.Iterator, collections.Iterable ),
+                self.__stdin_source = check_arg(option, value, types = ( bytes, str ),
+                    instance_of = ( File, collections.Iterator, collections.Iterable ),
                     values = ( STDIN, ))
             elif option == "_stdout":
                 self.__stdout_target = check_arg(
-                    option, value, types = File, values = ( STDOUT, STDERR, PIPE ))
+                    option, value, instance_of = File, values = ( STDOUT, STDERR, PIPE ))
             elif option == "_truncate_output":
-                self.__truncate_output = check_arg(option, value, bool)
+                self.__truncate_output = check_arg(option, value, types = ( bool, ))
             elif option == "_wait_for_output":
-                self.__wait_for_output = check_arg(option, value, bool)
+                self.__wait_for_output = check_arg(option, value, types = ( bool, ))
             else:
                 raise InvalidArgument("Invalid option: {0}", option)
         # Process options <--
@@ -1154,7 +1122,7 @@ class Process:
         # Command arguments -->
         self.__command.append(self.__program)
 
-        for option, value in options.iteritems():
+        for option, value in options.items():
             if option.startswith("_"):
                 pass
             elif len(option) == 1:
@@ -1184,6 +1152,58 @@ class Process:
         """Returns True if this process is piped to another process."""
 
         return isinstance(self.__stdout_target, Process)
+
+
+    def __to_bytes(self):
+        """Returns the command string.
+
+        .. note::
+            Very lazy formatting.
+        """
+
+        return psys.b(self.__to_str())
+
+
+    def __to_str(self):
+        """Returns the command string.
+
+        .. note::
+            Very lazy formatting.
+        """
+
+        command = ""
+
+        for arg in self.__command:
+            if command:
+                command += " "
+
+            if type(arg) == bytes:
+                for c in b""" '"\\\r\n\t""":
+                    if c in arg:
+                        arg = repr(arg)[1:] if PY3 else repr(arg)
+                        break
+                else:
+                    arg = repr(arg)[1 + int(PY3):-1]
+
+                command += psys.u(arg)
+            else:
+                for c in """ '"\\\r\n\t""":
+                    if c in arg:
+                        for replacement in (
+                            ( "\\", r"\\" ),
+                            ( "'",  r"\'" ),
+                            ( "\r", r"\r" ),
+                            ( "\n", r"\n" ),
+                            ( "\t", r"\t" ),
+                        ):
+                            arg = arg.replace(*replacement)
+
+                        arg = "'" + arg + "'"
+                        break
+
+                command += arg
+
+        return command
 
 
     def __wait_pid_thread(self, fork_lock, termination_fd):
@@ -1223,14 +1243,22 @@ class Process:
                 LOG.error("Unable to close a pipe: %s.", psys.e(e))
 
 
+    if PY3:
+        __bytes__ = __to_bytes
+        __str__ = __to_str
+    else:
+        __str__ = __to_bytes
+        __unicode__ = __to_str
+
+
 
 def _get_arg_value(value, shell):
     """Returns an argument string value."""
 
-    if type(value) in ( str, unicode ):
+    if type(value) in ( bytes, str ):
         return value
-    elif type(value) in ( int, long, float ):
-        return unicode(value)
+    elif type(value) in ( int, float ) + ( tuple() if PY3 else (long,) ):
+        return str(value)
     elif shell and isinstance(value, Process):
         return value._shell_command_full()
     else:

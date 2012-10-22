@@ -6,6 +6,8 @@ import fcntl
 import logging
 import os
 
+from pcore import PY3
+
 import psys
 import psys.poll
 from psys import eintr_retry
@@ -83,18 +85,6 @@ class OutputIterator:
         self.__closed = True
 
 
-    def next(self):
-        """Iterator's 'next' method."""
-
-        if self.__data is None:
-            raise StopIteration()
-
-        if self.__closed:
-            raise InvalidOperation("The iterator is closed")
-
-        return self.__iter()
-
-
     def pipe(self):
         """Returns the output pipe."""
 
@@ -164,6 +154,18 @@ class OutputIterator:
             return data
 
 
+    def __next(self):
+        """Iterator's 'next' method."""
+
+        if self.__data is None:
+            raise StopIteration()
+
+        if self.__closed:
+            raise InvalidOperation("The iterator is closed")
+
+        return self.__iter()
+
+
     def __transform_block(self, block):
         """Transforms the data block to the output format."""
 
@@ -175,3 +177,9 @@ class OutputIterator:
             except:
                 self.__finalize()
                 raise
+
+
+    if PY3:
+        __next__ = __next
+    else:
+        next = __next

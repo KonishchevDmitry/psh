@@ -2,6 +2,8 @@
 
 from __future__ import unicode_literals
 
+from pcore import bytes, str, range
+
 import errno
 import os
 import platform
@@ -31,15 +33,17 @@ EXIT_FAILURE = 1
 
 
 def b(string):
-    """Converts a unicode string to byte string in system encoding.
+    """Converts a unicode string to a byte string in the system encoding.
 
-    For now always assumes UTF-8 as system encoding
+    For now always assumes UTF-8 as system encoding.
     """
 
-    if isinstance(string, unicode):
+    if type(string) == bytes:
+        return string
+    elif isinstance(string, str):
         return string.encode("utf-8")
     else:
-        return string
+        raise TypeError("Invalid object type")
 
 
 def close_all_fds(except_fds = [ STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO ]):
@@ -56,7 +60,7 @@ def close_all_fds(except_fds = [ STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO ]):
         max_fd_num = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
         if max_fd_num == resource.RLIM_INFINITY:
             max_fd_num = 1024
-        opened_fds = xrange(0, max_fd_num)
+        opened_fds = range(0, max_fd_num)
 
     for fd in opened_fds:
         if fd not in except_fds:
@@ -70,7 +74,7 @@ def close_all_fds(except_fds = [ STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO ]):
 def e(error):
     """Returns an exception error string."""
 
-    return os.strerror(error.errno) if isinstance(error, EnvironmentError) else unicode(error)
+    return os.strerror(error.errno) if isinstance(error, EnvironmentError) else str(error)
 
 
 def eintr_retry(func):
@@ -109,12 +113,14 @@ def join_thread(thread, timeout = None):
 
 
 def u(string):
-    """Converts a byte string in system encoding to unicode string.
+    """Converts a byte string in the system encoding to a unicode string.
 
-    For now always assumes UTF-8 as system encoding
+    For now always assumes UTF-8 as system encoding.
     """
 
-    if isinstance(string, unicode):
+    if type(string) == str:
         return string
-    else:
+    elif isinstance(string, bytes):
         return string.decode("utf-8")
+    else:
+        raise TypeError("Invalid object type")

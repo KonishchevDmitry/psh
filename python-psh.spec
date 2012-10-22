@@ -7,7 +7,7 @@
 %global with_check 1
 
 Name:    python-psh
-Version: 0.1
+Version: 0.2
 Release: 1%{?dist}
 Summary: Process management library
 
@@ -90,5 +90,8 @@ find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
 
 
 %changelog
+* Mon Oct 22 2012 Dmitry Konishchev <konishchev@gmail.com> - 0.2-1
+- New version.
+
 * Fri Oct 12 2012 Dmitry Konishchev <konishchev@gmail.com> - 0.1-1
 - New package.

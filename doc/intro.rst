@@ -50,13 +50,6 @@ Output::
     /dev/sda2 (/mnt/data) ran out of disk space (95%)
 
 
-Python versions
----------------
-
-Currently only Python 2.6+ is supported. Python 3 support will be added in the
-future releases.
-
-
 Installation
 ------------
 
@@ -65,6 +58,12 @@ You can install psh by executing the following commands::
     git clone https://github.com/KonishchevDmitry/psh.git && cd psh
     python setup.py build
     sudo python setup.py install
+
+
+Python versions
+---------------
+
+Python 2.6+ and 3.0+ are supported.
 
 
 
@@ -86,8 +85,8 @@ which can be executed. To obtain a :py:class:`Program` object just write::
 For programs that have dashes in their names, for example ``google-chrome``,
 substitute the dash with an underscore::
 
-	from psh import sh
-	sh.google_chrome("http://google.com")
+    from psh import sh
+    sh.google_chrome("http://google.com")
 
 .. note::
 
@@ -128,15 +127,15 @@ Keyword arguments
 Commands support short-form (``-a``) and long-form (``--arg``) arguments as
 keyword arguments::
 
-	sh.useradd("ftp", m = True, system = True, shell = "/usr/sbin/nologin")
+    sh.useradd("ftp", m = True, system = True, shell = "/usr/sbin/nologin")
 
 which is equal to::
 
-	sh.useradd("-m", "--system", "--shell", "/usr/sbin/nologin", "ftp")
+    sh.useradd("-m", "--system", "--shell", "/usr/sbin/nologin", "ftp")
 
 where both resolve to::
 
-	useradd -m --system --shell /usr/sbin/nologin ftp
+    useradd -m --system --shell /usr/sbin/nologin ftp
 
 
 .. _piping:

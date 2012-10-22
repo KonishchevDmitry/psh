@@ -30,7 +30,7 @@ and an elegant shell-style way to execute processes.\
 
 setup(
     name = "psh",
-    version = "0.1",
+    version = "0.2",
 
     license = "GPL3",
     description = "Process management library",

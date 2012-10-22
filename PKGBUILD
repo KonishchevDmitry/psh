@@ -1,14 +1,14 @@
 # Maintainer: Nekolyanich <gmail@nekolyanich.com>
 pkgname=python2-psh
-pkgver=20121018
+pkgver=0.2
 pkgrel=1
 pkgdesc="psh allows you to spawn processes in Unix shell-style way"
-arch=('i686' 'x86_64')
+arch=("i686" "x86_64")
 url="http://konishchevdmitry.github.com/psh/"
-license=('GPL3')
-depends=('python2')
-makedepends=('git')
-provides=('python2-psh')
+license=("GPL3")
+depends=("python2")
+makedepends=("git")
+provides=("python2-psh")
 conflicts=()
 replaces=()
 backup=()

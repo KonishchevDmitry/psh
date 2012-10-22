@@ -4,7 +4,7 @@
 #
 
 test_env_path="test-env"
-python_versions="2"
+python_versions="2 3"
 
 mkdir -p "$test_env_path"
 

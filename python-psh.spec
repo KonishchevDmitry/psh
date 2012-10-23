@@ -55,7 +55,7 @@ Documentation for psh
 %{__python} setup.py build
 
 %if 0%{?with_docs}
-make -C doc html
+make doc
 rm doc/_build/html/.buildinfo
 %endif
 

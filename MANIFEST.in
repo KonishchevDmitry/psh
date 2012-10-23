@@ -1,0 +1,8 @@
+graft doc
+graft tests
+include ChangeLog
+include INSTALL
+include Makefile
+include PKGBUILD
+include python-psh.spec
+include README.rst

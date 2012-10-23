@@ -48,7 +48,7 @@ Documentation for psh
 
 
 %prep
-%setup -n psh -q
+%setup -n psh-%{version} -q
 
 
 %build
@@ -75,6 +75,7 @@ find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
 
 %files
 %defattr(-,root,root,-)
+%{python_sitelib}/pcore
 %{python_sitelib}/psh
 %{python_sitelib}/psys
 

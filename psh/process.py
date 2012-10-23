@@ -139,7 +139,7 @@ class Process:
 
     :keyword _on_execute: if is not :py:const:`None`, the object is called
         before the process execution (default is :py:const:`None`)
-    :type _on_execute: a callable object
+    :type _on_execute: :py:class:`collections.Callable`
 
 
     :keyword _shell: if True, accept :py:class:`Process` objects as command
@@ -1061,14 +1061,8 @@ class Process:
         """Parses command arguments and options."""
 
         # Process options -->
-        def check_arg(
-            option, value, types = tuple(), instance_of = tuple(),
-            values = tuple(), check = lambda value: False
-        ):
-            if (
-                type(value) not in types and not isinstance(value, instance_of) and
-                value not in values and not check(value)
-            ):
+        def check_arg(option, value, types = tuple(), instance_of = tuple(), values = tuple()):
+            if type(value) not in types and not isinstance(value, instance_of) and value not in values:
                 raise InvalidArgument("Invalid value for option {0}", option)
 
             return value
@@ -1098,7 +1092,7 @@ class Process:
                 self.__ok_statuses = [
                     check_arg(option, status, types = ( int, )) for status in value ]
             elif option == "_on_execute":
-                self.__on_execute = check_arg(option, value, check = callable)
+                self.__on_execute = check_arg(option, value, instance_of = collections.Callable)
             elif option == "_shell":
                 self.__shell = check_arg(option, value, types = ( bool, ))
             elif option == "_stderr":

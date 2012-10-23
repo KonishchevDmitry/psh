@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>psh 0.2 &mdash; psh 0.2 documentation</title>
+    <title>psh 0.2.1 &mdash; psh 0.2.1 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.2',
+        VERSION:     '0.2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="psh 0.2 documentation" href="index.html" />
+    <link rel="top" title="psh 0.2.1 documentation" href="index.html" />
     <link rel="up" title="Module reference" href="reference.html" />
     <link rel="prev" title="Module reference" href="reference.html" /> 
   </head>
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="reference.html" title="Module reference"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">psh 0.2 documentation</a> &raquo;</li>
+        <li><a href="index.html">psh 0.2.1 documentation</a> &raquo;</li>
           <li><a href="reference.html" accesskey="U">Module reference</a> &raquo;</li> 
       </ul>
     </div>  
@@ -53,9 +53,9 @@
           <div class="body">
             
   <div class="section" id="psh-version">
-<h1>psh 0.2<a class="headerlink" href="#psh-version" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://github.com/KonishchevDmitry/psh">psh</a> allows you to spawn processes
-in Unix shell-style way. It is inspired by <a class="reference external" href="http://amoffat.github.com/sh/">sh</a> module but has a fully different
+<h1>psh 0.2.1<a class="headerlink" href="#psh-version" title="Permalink to this headline">¶</a></h1>
+<p>psh allows you to spawn processes in Unix shell-style way. It is inspired by
+<a class="reference external" href="http://amoffat.github.com/sh/">sh</a> module but has a fully different
 implementation and API.</p>
 <p>Unix shell is very convenient for spawning processes, connecting them into
 pipes, etc., but it has a very limited language which is often not suitable for
@@ -63,6 +63,7 @@ writing complex programs. Python is a very flexible and reach language which is
 used in a wide variety of application domains, but its standard
 <a class="reference external" href="http://docs.python.org/library/subprocess.html#subprocess" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">subprocess</span></tt></a> module is very limited. psh combines the power of Python
 language and an elegant shell-style way to execute processes.</p>
+<p>Follow it on GitHub: <a class="reference external" href="https://github.com/KonishchevDmitry/psh">https://github.com/KonishchevDmitry/psh</a>.</p>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>Print output of <tt class="docutils literal"><span class="pre">echo</span> <span class="pre">-n</span> <span class="pre">&quot;text&quot;</span></tt>:</p>
@@ -95,7 +96,14 @@ language and an elegant shell-style way to execute processes.</p>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>You can install psh by executing the following commands:</p>
+<p>You can install the latest psh version using <a class="reference external" href="http://www.pip-installer.org/">pip</a>:</p>
+<div class="highlight-python"><pre>pip install psh</pre>
+</div>
+<p>or using <a class="reference external" href="http://packages.python.org/distribute/easy_install.html">easy_install</a>:</p>
+<div class="highlight-python"><pre>easy_install psh</pre>
+</div>
+<p>or you can install the latest development version by issuing the following
+commands:</p>
 <div class="highlight-python"><pre>git clone https://github.com/KonishchevDmitry/psh.git &amp;&amp; cd psh
 python setup.py build
 sudo python setup.py install</pre>
@@ -380,7 +388,7 @@ thread-safety guaranties and additional features.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">psh 0.2</a><ul>
+<li><a class="reference internal" href="#">psh 0.2.1</a><ul>
 <li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#python-versions">Python versions</a></li>
@@ -438,7 +446,7 @@ thread-safety guaranties and additional features.</p>
         <li class="right" >
           <a href="reference.html" title="Module reference"
              >previous</a> |</li>
-        <li><a href="index.html">psh 0.2 documentation</a> &raquo;</li>
+        <li><a href="index.html">psh 0.2.1 documentation</a> &raquo;</li>
           <li><a href="reference.html" >Module reference</a> &raquo;</li> 
       </ul>
     </div>

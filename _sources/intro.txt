@@ -4,9 +4,8 @@
 psh |version|
 =============
 
-`psh <https://github.com/KonishchevDmitry/psh>`_ allows you to spawn processes
-in Unix shell-style way. It is inspired by `sh
-<http://amoffat.github.com/sh/>`_ module but has a fully different
+psh allows you to spawn processes in Unix shell-style way. It is inspired by
+`sh <http://amoffat.github.com/sh/>`_ module but has a fully different
 implementation and API.
 
 Unix shell is very convenient for spawning processes, connecting them into
@@ -15,6 +14,9 @@ writing complex programs. Python is a very flexible and reach language which is
 used in a wide variety of application domains, but its standard
 :py:mod:`subprocess` module is very limited. psh combines the power of Python
 language and an elegant shell-style way to execute processes.
+
+Follow it on GitHub: `https://github.com/KonishchevDmitry/psh
+<https://github.com/KonishchevDmitry/psh>`_.
 
 
 Examples
@@ -50,21 +52,29 @@ Output::
     /dev/sda2 (/mnt/data) ran out of disk space (95%)
 
 
-Python versions
----------------
-
-Currently only Python 2.6+ is supported. Python 3 support will be added in the
-future releases.
-
-
 Installation
 ------------
 
-You can install psh by executing the following commands::
+You can install the latest psh version using `pip <http://www.pip-installer.org/>`_::
+
+    pip install psh
+
+or using `easy_install <http://packages.python.org/distribute/easy_install.html>`_::
+
+    easy_install psh
+
+or you can install the latest development version by issuing the following
+commands::
 
     git clone https://github.com/KonishchevDmitry/psh.git && cd psh
     python setup.py build
     sudo python setup.py install
+
+
+Python versions
+---------------
+
+Python 2.6+ and 3.0+ are supported.
 
 
 
@@ -86,8 +96,8 @@ which can be executed. To obtain a :py:class:`Program` object just write::
 For programs that have dashes in their names, for example ``google-chrome``,
 substitute the dash with an underscore::
 
-	from psh import sh
-	sh.google_chrome("http://google.com")
+    from psh import sh
+    sh.google_chrome("http://google.com")
 
 .. note::
 
@@ -128,15 +138,15 @@ Keyword arguments
 Commands support short-form (``-a``) and long-form (``--arg``) arguments as
 keyword arguments::
 
-	sh.useradd("ftp", m = True, system = True, shell = "/usr/sbin/nologin")
+    sh.useradd("ftp", m = True, system = True, shell = "/usr/sbin/nologin")
 
 which is equal to::
 
-	sh.useradd("-m", "--system", "--shell", "/usr/sbin/nologin", "ftp")
+    sh.useradd("-m", "--system", "--shell", "/usr/sbin/nologin", "ftp")
 
 where both resolve to::
 
-	useradd -m --system --shell /usr/sbin/nologin ftp
+    useradd -m --system --shell /usr/sbin/nologin ftp
 
 
 .. _piping:

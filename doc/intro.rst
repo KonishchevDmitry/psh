@@ -4,9 +4,8 @@
 psh |version|
 =============
 
-`psh <https://github.com/KonishchevDmitry/psh>`_ allows you to spawn processes
-in Unix shell-style way. It is inspired by `sh
-<http://amoffat.github.com/sh/>`_ module but has a fully different
+psh allows you to spawn processes in Unix shell-style way. It is inspired by
+`sh <http://amoffat.github.com/sh/>`_ module but has a fully different
 implementation and API.
 
 Unix shell is very convenient for spawning processes, connecting them into
@@ -15,6 +14,9 @@ writing complex programs. Python is a very flexible and reach language which is
 used in a wide variety of application domains, but its standard
 :py:mod:`subprocess` module is very limited. psh combines the power of Python
 language and an elegant shell-style way to execute processes.
+
+Follow it on GitHub: `https://github.com/KonishchevDmitry/psh
+<https://github.com/KonishchevDmitry/psh>`_.
 
 
 Examples
@@ -53,7 +55,16 @@ Output::
 Installation
 ------------
 
-You can install psh by executing the following commands::
+You can install the latest psh version using `pip <http://www.pip-installer.org/>`_::
+
+    pip install psh
+
+or using `easy_install <http://packages.python.org/distribute/easy_install.html>`_::
+
+    easy_install psh
+
+or you can install the latest development version by issuing the following
+commands::
 
     git clone https://github.com/KonishchevDmitry/psh.git && cd psh
     python setup.py build

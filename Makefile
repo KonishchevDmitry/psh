@@ -39,6 +39,9 @@ srpm: rpm_sources
 rpm: rpm_sources
 	rpmbuild -ba python-$(PROJECT).spec
 
+pypi: clean
+	$(PYTHON) setup.py sdist upload
+
 clean:
 	@make -C doc clean
 	rm -rf build dist $(PROJECT).egg-info $(TEST_ENV_PATH)

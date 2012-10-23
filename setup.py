@@ -25,7 +25,9 @@ pipes, etc., but it has a very limited language which is often not suitable
 for writing complex programs. Python is a very flexible and reach language
 which is used in a wide variety of application domains, but its standard
 subprocess module is very limited. psh combines the power of Python language
-and an elegant shell-style way to execute processes.\
+and an elegant shell-style way to execute processes.
+
+Complete documentation is available at http://konishchevdmitry.github.com/psh/\
 """
 
 if __name__ == "__main__":

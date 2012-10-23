@@ -14,7 +14,7 @@ Summary: Process management library
 Group:   Development/Languages
 License: GPLv3
 URL:     http://konishchevdmitry.github.com/psh/
-Source0: psh.tar.gz
+Source:  http://pypi.python.org/packages/source/p/psh/psh-%{version}.tar.gz
 
 BuildArch:     noarch
 BuildRequires: python-setuptools

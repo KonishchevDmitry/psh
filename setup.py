@@ -28,20 +28,34 @@ subprocess module is very limited. psh combines the power of Python language
 and an elegant shell-style way to execute processes.\
 """
 
-setup(
-    name = "psh",
-    version = "0.2",
+if __name__ == "__main__":
+    setup(
+        name = "psh",
+        version = "0.2",
 
-    license = "GPL3",
-    description = "Process management library",
-    long_description = description,
-    url = "http://konishchevdmitry.github.com/psh/",
+        description = "Process management library",
+        long_description = description,
+        url = "http://konishchevdmitry.github.com/psh/",
 
-    author = "Dmitry Konishchev",
-    author_email = "konishchev@gmail.com",
+        license = "GPL3",
+        author = "Dmitry Konishchev",
+        author_email = "konishchev@gmail.com",
 
-    packages = find_packages(),
+        classifiers = [
+            "Development Status :: 4 - Beta",
+            "Intended Audience :: Developers",
+            "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+            "Operating System :: MacOS :: MacOS X",
+            "Operating System :: POSIX",
+            "Operating System :: Unix",
+            "Programming Language :: Python :: 2",
+            "Programming Language :: Python :: 3",
+            "Topic :: Software Development :: Libraries :: Python Modules",
+        ],
+        platforms = [ "unix", "linux", "osx" ],
 
-    cmdclass = { "test": PyTest },
-    tests_require = [ "pytest" ],
-)
+        packages = find_packages(),
+
+        cmdclass = { "test": PyTest },
+        tests_require = [ "pytest" ],
+    )

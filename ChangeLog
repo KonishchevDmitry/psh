@@ -1,8 +1,16 @@
+Version 0.2.1
+-------------
+ * PyPI support
+ * Makefile with common targets
+ * Fixed broken python-psh.spec
+ * Minor code and documentation changes
+
+
 Version 0.2
 -----------
- * Python 3 support.
+ * Python 3 support
 
 
 Version 0.1
 -----------
- * Initial release.
+ * Initial release

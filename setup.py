@@ -33,7 +33,7 @@ Complete documentation is available at http://konishchevdmitry.github.com/psh/\
 if __name__ == "__main__":
     setup(
         name = "psh",
-        version = "0.2",
+        version = "0.2.1",
 
         description = "Process management library",
         long_description = description,

@@ -1,6 +1,6 @@
 # Maintainer: Nekolyanich <gmail@nekolyanich.com>
 pkgname=python2-psh
-pkgver=0.2.1
+pkgver=0.2.2
 pkgrel=1
 pkgdesc="psh allows you to spawn processes in Unix shell-style way"
 arch=("i686" "x86_64")

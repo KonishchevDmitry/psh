@@ -25,13 +25,6 @@ STDERR_FILENO = 2
 """Standard error output descriptor."""
 
 
-EXIT_SUCCESS = 0
-"""Successful exit status."""
-
-EXIT_FAILURE = 1
-"""Failing exit status."""
-
-
 
 def b(string):
     """Converts a unicode string to a byte string in the system encoding.

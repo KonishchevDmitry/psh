@@ -243,7 +243,7 @@ class Process:
         self.__command = []
 
         # Success status codes for this command
-        self.__ok_statuses = [ psys.EXIT_SUCCESS ]
+        self.__ok_statuses = [ os.EX_OK ]
 
 
         # Process' pipes

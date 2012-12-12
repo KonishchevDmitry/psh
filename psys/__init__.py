@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from pcore import bytes, str, range
 
+import collections
 import errno
 import os
 import platform
@@ -89,6 +90,21 @@ def eintr_retry(func):
                     raise e
 
     return wrapper
+
+
+def is_errno(error, errnos):
+    """
+    Checks whether the specified error is an exception for one of the
+    specified error numbers.
+    """
+
+    if not isinstance(error, EnvironmentError):
+        return False
+
+    if isinstance(errnos, collections.Iterable):
+        return error.errno in errnos
+    else:
+        return error.errno == errnos
 
 
 def join_thread(thread, timeout = None):

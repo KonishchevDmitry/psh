@@ -1,4 +1,4 @@
-.PHONY: build check install doc dist rpm_sources srpm rpm clean
+.PHONY: build check install doc dist rpm_sources srpm rpm pypi clean
 
 PROJECT := psh
 PYTHON := python

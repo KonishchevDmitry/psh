@@ -22,7 +22,7 @@ check:
 	done
 
 install:
-	$(PYTHON) setup.py install
+	$(PYTHON) setup.py install --skip-build
 
 doc:
 	make -C doc html

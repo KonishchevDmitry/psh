@@ -3,4 +3,4 @@ Installation
 
 Run directly from the source directory:
 $ python setup.py build
-$ sudo python setup.py install
+$ sudo python setup.py install --skip-build

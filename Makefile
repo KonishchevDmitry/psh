@@ -16,7 +16,7 @@ check:
 		env_path="$(TEST_ENV_PATH)/python$$version"; \
 		if [ ! -e "$$env_path" ]; then \
 			virtualenv --python python$$version --distribute "$$env_path" && \
-				"$$env_path/bin/pip" install pytest || { rm -rf "$$env_path"; false; }; \
+				"$$env_path/bin/pip" install psys pytest || { rm -rf "$$env_path"; false; }; \
 		fi; \
 		"$$env_path/bin/python" setup.py test; \
 	done
@@ -44,4 +44,4 @@ pypi: clean
 
 clean:
 	@make -C doc clean
-	rm -rf build dist $(PROJECT).egg-info $(TEST_ENV_PATH)
+	rm -rf build dist $(PROJECT).egg-info *.egg $(TEST_ENV_PATH)

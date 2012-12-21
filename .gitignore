@@ -4,3 +4,4 @@
 /doc/_build
 /psh.egg-info
 /test-env
+/*.egg

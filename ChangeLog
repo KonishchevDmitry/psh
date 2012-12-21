@@ -1,3 +1,8 @@
+Version 0.2.3
+-------------
+ * psys module has been separated to an independent package
+
+
 Version 0.2.2
 -------------
  * Fixed a bug that led to AttributeError on the module import in Python 2.6

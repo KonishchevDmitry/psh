@@ -7,7 +7,7 @@
 %global with_check 1
 
 Name:    python-psh
-Version: 0.2.2
+Version: 0.2.3
 Release: 1%{?dist}
 Summary: Process management library
 
@@ -16,13 +16,15 @@ License: GPLv3
 URL:     http://konishchevdmitry.github.com/psh/
 Source:  http://pypi.python.org/packages/source/p/psh/psh-%{version}.tar.gz
 
+Requires: python-psys
+
 BuildArch:     noarch
 BuildRequires: python-setuptools
 %if 0%{?with_check}
-BuildRequires: pytest >= 2.2.4
+BuildRequires: python-psys, pytest >= 2.2.4
 %endif
 %if 0%{?with_docs}
-BuildRequires: make, python-sphinx
+BuildRequires: make, python-sphinx, python-psys
 %endif
 
 %description
@@ -75,9 +77,7 @@ find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
 
 %files
 %defattr(-,root,root,-)
-%{python_sitelib}/pcore
 %{python_sitelib}/psh
-%{python_sitelib}/psys
 
 %if 0%{?with_docs}
 %files doc
@@ -91,6 +91,9 @@ find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
 
 
 %changelog
+* Fri Dec 21 2012 Dmitry Konishchev <konishchev@gmail.com> - 0.2.3-1
+- New version.
+
 * Thu Oct 25 2012 Dmitry Konishchev <konishchev@gmail.com> - 0.2.2-1
 - New version.
 

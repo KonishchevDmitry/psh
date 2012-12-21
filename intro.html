@@ -37,9 +37,6 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="reference.html" title="Module reference"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">psh 0.2.2 documentation</a> &raquo;</li>
@@ -118,9 +115,9 @@ sudo python setup.py install</pre>
 <h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="command-execution">
 <span id="id1"></span><h2>Command execution<a class="headerlink" href="#command-execution" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="reference.html#module-psh" title="psh"><tt class="xref py py-mod docutils literal"><span class="pre">psh</span></tt></a> module has an object named <a class="reference internal" href="reference.html#psh.sh" title="psh.sh"><tt class="xref py py-data docutils literal"><span class="pre">sh</span></tt></a> which is a factory of
-<a class="reference internal" href="reference.html#psh.Program" title="psh.Program"><tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt></a> objects. A <a class="reference internal" href="reference.html#psh.Program" title="psh.Program"><tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt></a> object represents a program
-which can be executed. To obtain a <a class="reference internal" href="reference.html#psh.Program" title="psh.Program"><tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt></a> object just write:</p>
+<p><tt class="xref py py-mod docutils literal"><span class="pre">psh</span></tt> module has an object named <tt class="xref py py-data docutils literal"><span class="pre">sh</span></tt> which is a factory of
+<tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt> objects. A <tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt> object represents a program
+which can be executed. To obtain a <tt class="xref py py-class docutils literal"><span class="pre">Program</span></tt> object just write:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
 <span class="n">echo</span> <span class="o">=</span> <span class="n">sh</span><span class="o">.</span><span class="n">echo</span>
 </pre></div>
@@ -142,15 +139,15 @@ substitute the dash with an underscore:</p>
 </div>
 </div>
 <p>To execute a program just call it as if it is a function and then call
-<a class="reference internal" href="reference.html#psh.Process.execute" title="psh.Process.execute"><tt class="xref py py-meth docutils literal"><span class="pre">execute()</span></tt></a> method:</p>
+<tt class="xref py py-meth docutils literal"><span class="pre">execute()</span></tt> method:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
 <span class="n">sh</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 <span class="n">sh</span><span class="p">(</span><span class="s">&quot;python2.7&quot;</span><span class="p">)(</span><span class="s">&quot;script.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">sh.echo(&quot;text&quot;)</span></tt> returns a <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> instance which holds all
+<p><tt class="docutils literal"><span class="pre">sh.echo(&quot;text&quot;)</span></tt> returns a <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt> instance which holds all
 arguments and state of the process which will be executed.</p>
-<p>A process is not executed automatically by default when a <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a>
+<p>A process is not executed automatically by default when a <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt>
 object is created. This is done so to support <a class="reference internal" href="#piping"><em>Piping</em></a> and
 <a class="reference internal" href="#output-iteration"><em>Iterating over output</em></a>. But if you want just simply run commands, you may use
 <tt class="docutils literal"><span class="pre">_defer</span> <span class="pre">=</span> <span class="pre">False</span></tt> option:</p>
@@ -180,7 +177,7 @@ keyword arguments:</p>
 </div>
 <div class="section" id="piping">
 <span id="id2"></span><h2>Piping<a class="headerlink" href="#piping" title="Permalink to this headline">¶</a></h2>
-<p>Shell-style piping is performed using <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> object composition.
+<p>Shell-style piping is performed using <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt> object composition.
 Just pass one command as the input to another, and psh will create a pipe
 between the two:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">process</span> <span class="o">=</span> <span class="n">sh</span><span class="o">.</span><span class="n">du</span><span class="p">()</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s">&quot;-nr&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="s">&quot;-n&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -229,7 +226,7 @@ evaluation order:</p>
 <div class="section" id="exit-codes">
 <span id="id3"></span><h2>Exit codes<a class="headerlink" href="#exit-codes" title="Permalink to this headline">¶</a></h2>
 <p>Normal processes exit with exit code 0. Process&#8217; exit code can be obtained
-through <a class="reference internal" href="reference.html#psh.Process.status" title="psh.Process.status"><tt class="xref py py-meth docutils literal"><span class="pre">status()</span></tt></a>:</p>
+through <tt class="xref py py-meth docutils literal"><span class="pre">status()</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">assert</span> <span class="n">sh</span><span class="o">.</span><span class="n">true</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span><span class="o">.</span><span class="n">status</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
 </pre></div>
 </div>
@@ -253,7 +250,7 @@ very easy way which is not available in the shell.</p>
 <div class="section" id="setting-default-process-options">
 <span id="default-options"></span><h2>Setting default process options<a class="headerlink" href="#setting-default-process-options" title="Permalink to this headline">¶</a></h2>
 <p>As you saw above, you can control process execution via options passed to the
-<a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> instance, such as <tt class="docutils literal"><span class="pre">_defer</span> <span class="pre">=</span> <span class="pre">False</span></tt>. But sometimes you may
+<tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt> instance, such as <tt class="docutils literal"><span class="pre">_defer</span> <span class="pre">=</span> <span class="pre">False</span></tt>. But sometimes you may
 realize that the default option values is not very suitable for you and you
 override them almost in every command.</p>
 <p>For example, you want all commands to be executed immediately saving their
@@ -280,11 +277,11 @@ default option values for the specific command:</p>
 </div>
 <div class="section" id="with-contexts">
 <h2>&#8216;With&#8217; contexts<a class="headerlink" href="#with-contexts" title="Permalink to this headline">¶</a></h2>
-<p>You can use <tt class="docutils literal"><span class="pre">with</span></tt> statement on <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> objects to guarantee that
-the process will be <a class="reference internal" href="reference.html#psh.Process.wait" title="psh.Process.wait"><tt class="xref py py-meth docutils literal"><span class="pre">wait()</span></tt></a>&#8216;ed when you leave the <tt class="docutils literal"><span class="pre">with</span></tt> context, which also
-frees all opened file descriptors and other resources (see <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a>
+<p>You can use <tt class="docutils literal"><span class="pre">with</span></tt> statement on <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt> objects to guarantee that
+the process will be <tt class="xref py py-meth docutils literal"><span class="pre">wait()</span></tt>&#8216;ed when you leave the <tt class="docutils literal"><span class="pre">with</span></tt> context, which also
+frees all opened file descriptors and other resources (see <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt>
 reference for details).</p>
-<p>Using <tt class="docutils literal"><span class="pre">with</span></tt> context with <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> objects is the same as with all
+<p>Using <tt class="docutils literal"><span class="pre">with</span></tt> context with <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt> objects is the same as with all
 other Python&#8217;s objects:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
 
@@ -311,7 +308,7 @@ objects:</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">You should always iterate over process output inside a <tt class="docutils literal"><span class="pre">with</span></tt> context
-(see <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> reference for description why).</p>
+(see <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt> reference for description why).</p>
 </div>
 </div>
 <div class="section" id="working-with-ssh">
@@ -321,7 +318,7 @@ objects:</p>
 creating and piping processes with psh. For this reason psh gives you a way to
 run processes on a remote host in the same way you use for the local host. The
 only thing you have to do is to run a remote shell process (<tt class="docutils literal"><span class="pre">ssh</span></tt>, <tt class="docutils literal"><span class="pre">pdsh</span></tt>,
-etc.) with <tt class="docutils literal"><span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True</span></tt> option and pass a <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> object as an
+etc.) with <tt class="docutils literal"><span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True</span></tt> option and pass a <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt> object as an
 argument to it:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">psh</span> <span class="kn">import</span> <span class="n">sh</span>
@@ -335,7 +332,7 @@ argument to it:</p>
             <span class="k">print</span> <span class="s">&quot;{0} ({1}) ran out of disk space ({2}%)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">,</span> <span class="n">used</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>When <tt class="docutils literal"><span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True</span></tt> option is passed, all <a class="reference internal" href="reference.html#psh.Process" title="psh.Process"><tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt></a> instances that
+<p>When <tt class="docutils literal"><span class="pre">_shell</span> <span class="pre">=</span> <span class="pre">True</span></tt> option is passed, all <tt class="xref py py-class docutils literal"><span class="pre">Process</span></tt> instances that
 you specified as arguments will be converted to a shell script, which is equal
 to the passed command, and <tt class="docutils literal"><span class="pre">ssh</span></tt> will execute it on the remote side.</p>
 <p>For simple commands a generated script will be quite expectable. For example,
@@ -363,9 +360,9 @@ redirections causes an exception to be raised.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">ssh</span><span class="p">(</span><span class="s">&quot;host&quot;</span><span class="p">,</span> <span class="n">sh</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s">&quot;data&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">grep</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">sh</span><span class="o">.</span><span class="n">wc</span><span class="p">(</span><span class="s">&quot;-l&quot;</span><span class="p">),</span> <span class="n">_shell</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Both commands will raise <a class="reference internal" href="reference.html#psh.ExecutionError" title="psh.ExecutionError"><tt class="xref py py-class docutils literal"><span class="pre">ExecutionError</span></tt></a>, but for the first one
-<a class="reference internal" href="reference.html#psh.ExecutionError.status" title="psh.ExecutionError.status"><tt class="xref py py-meth docutils literal"><span class="pre">ExecutionError.status()</span></tt></a> will return 1 from the failed <tt class="docutils literal"><span class="pre">grep</span></tt>
-command and for the second one <a class="reference internal" href="reference.html#psh.ExecutionError.status" title="psh.ExecutionError.status"><tt class="xref py py-meth docutils literal"><span class="pre">ExecutionError.status()</span></tt></a> will
+<p>Both commands will raise <tt class="xref py py-class docutils literal"><span class="pre">ExecutionError</span></tt>, but for the first one
+<tt class="xref py py-meth docutils literal"><span class="pre">ExecutionError.status()</span></tt> will return 1 from the failed <tt class="docutils literal"><span class="pre">grep</span></tt>
+command and for the second one <tt class="xref py py-meth docutils literal"><span class="pre">ExecutionError.status()</span></tt> will
 return 128.</p>
 <p class="last">This is because there is no way to pass a pair &#8220;failed command, return
 status code&#8221; from within ssh without making the generated script
@@ -440,9 +437,6 @@ thread-safety guaranties and additional features.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
         <li class="right" >
           <a href="reference.html" title="Module reference"
              >previous</a> |</li>

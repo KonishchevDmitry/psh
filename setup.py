@@ -56,7 +56,7 @@ if __name__ == "__main__":
         ],
         platforms = [ "unix", "linux", "osx" ],
 
-        install_requires = [ "psys", "psh" ],
+        install_requires = [ "psys" ],
         packages = find_packages(),
 
         cmdclass = { "test": PyTest },

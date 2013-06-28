@@ -8,13 +8,13 @@
 
 Name:    python-psh
 Version: 0.2.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: Process management library
 
 Group:   Development/Languages
 License: GPLv3
 URL:     http://konishchevdmitry.github.com/psh/
-Source:  http://pypi.python.org/packages/source/p/psh/psh-%{version}.tar.gz
+Source:  http://pypi.python.org/packages/source/p/psh/psh-%version.tar.gz
 
 Requires: python-psys
 
@@ -50,11 +50,11 @@ Documentation for psh
 
 
 %prep
-%setup -n psh-%{version} -q
+%setup -n psh-%version -q
 
 
 %build
-%{__python} setup.py build
+%__python setup.py build
 
 %if 0%{?with_docs}
 make doc
@@ -64,20 +64,21 @@ rm doc/_build/html/.buildinfo
 
 %if 0%{?with_check}
 %check
-%{__python} setup.py test
+%__python setup.py test
 %endif
 
 
 %install
-[ %buildroot = "/" ] || rm -rf %buildroot
+[ "%buildroot" = "/" ] || rm -rf "%buildroot"
 
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
-find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
+%__python setup.py install -O1 --skip-build --root "%buildroot"
 
 
 %files
 %defattr(-,root,root,-)
-%{python_sitelib}/psh
+
+%python_sitelib/psh
+%python_sitelib/psh-*.egg-info
 
 %if 0%{?with_docs}
 %files doc
@@ -87,10 +88,13 @@ find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
 
 
 %clean
-[ %buildroot = "/" ] || rm -rf %buildroot
+[ "%buildroot" = "/" ] || rm -rf "%buildroot"
 
 
 %changelog
+* Fri Jun 28 2013 Dmitry Konishchev <konishchev@gmail.com> - 0.2.3-2
+- Don't remove *.egg-info to make setup.py with entry_points work
+
 * Fri Dec 21 2012 Dmitry Konishchev <konishchev@gmail.com> - 0.2.3-1
 - New version.
 

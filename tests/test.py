@@ -71,8 +71,8 @@ def init(globals):
     globals["pytest_funcarg__test"] = check_leaks
 
     try:
-        import pycl.log
+        import pcli.log
     except ImportError:
         pass
     else:
-        pycl.log.setup(debug_mode = True)
+        pcli.log.setup(debug_mode = True)

@@ -33,7 +33,7 @@ Complete documentation is available at http://konishchevdmitry.github.com/psh/\
 if __name__ == "__main__":
     setup(
         name = "psh",
-        version = "0.2.3",
+        version = "0.2.4",
 
         description = "Process management library",
         long_description = description,
@@ -56,9 +56,9 @@ if __name__ == "__main__":
         ],
         platforms = [ "unix", "linux", "osx" ],
 
-        install_requires = [ "psys" ],
+        install_requires = [ "pcore", "psys >= 0.3" ],
         packages = find_packages(),
 
         cmdclass = { "test": PyTest },
-        tests_require = [ "psys", "pytest" ],
+        tests_require = [ "pcore", "psys >= 0.3", "pytest" ],
     )

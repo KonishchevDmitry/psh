@@ -7,8 +7,8 @@
 %global with_check 1
 
 Name:    python-psh
-Version: 0.2.3
-Release: 2%{?dist}
+Version: 0.2.4
+Release: 1%{?dist}
 Summary: Process management library
 
 Group:   Development/Languages
@@ -16,16 +16,16 @@ License: GPLv3
 URL:     http://konishchevdmitry.github.com/psh/
 Source:  http://pypi.python.org/packages/source/p/psh/psh-%version.tar.gz
 
-Requires: python-psys
-
 BuildArch:     noarch
 BuildRequires: python-setuptools
 %if 0%{?with_check}
-BuildRequires: python-psys, pytest >= 2.2.4
+BuildRequires: python-pcore, python-psys >= 0.3, pytest >= 2.2.4
 %endif
 %if 0%{?with_docs}
-BuildRequires: make, python-sphinx, python-psys
+BuildRequires: make, python-pcore, python-psys >= 0.3, python-sphinx
 %endif
+
+Requires: python-pcore, python-psys >= 0.3
 
 %description
 psh allows you to spawn processes in Unix shell-style way.
@@ -92,6 +92,9 @@ rm doc/_build/html/.buildinfo
 
 
 %changelog
+* Mon Nov 18 2013 Dmitry Konishchev <konishchev@gmail.com> - 0.2.4-1
+- New version.
+
 * Fri Jun 28 2013 Dmitry Konishchev <konishchev@gmail.com> - 0.2.3-2
 - Don't remove *.egg-info to make setup.py with entry_points work
 

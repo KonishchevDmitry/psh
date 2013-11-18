@@ -1,3 +1,8 @@
+Version 0.2.4
+-------------
+ * psys >= 0.3 support
+
+
 Version 0.2.3
 -------------
  * psys module has been separated to an independent package

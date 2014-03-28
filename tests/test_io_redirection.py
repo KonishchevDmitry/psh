@@ -215,7 +215,7 @@ def test_stdout_to_file_with_append(test, capfd):
             assert stdout == ""
             assert stderr == ""
 
-            with open(temp_file.name) as stdout:
+            with open(temp_file.name, "rb") as stdout:
                 assert psys.u(stdout.read()) == "orig\ntest1\nтест3\n"
     finally:
         logging.disable(logging.NOTSET)
@@ -242,7 +242,7 @@ def test_stderr_to_file_with_append(test, capfd):
             assert stdout == ""
             assert stderr == ""
 
-            with open(temp_file.name) as stderr:
+            with open(temp_file.name, "rb") as stderr:
                 assert psys.u(stderr.read()) == "orig\ntest2\nтест4\n"
     finally:
         logging.disable(logging.NOTSET)

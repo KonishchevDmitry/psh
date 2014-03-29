@@ -16,7 +16,7 @@ test.init(globals())
 def test_pipes(test):
     """Tests process pipes."""
 
-    process = sh.cat(_stdin = "aaaa\nbbbb\n" * 1024 * 100) | sh.grep("aaaa") | sh.wc("-l")
+    process = sh.cat(_stdin="aaaa\nbbbb\n" * 1024 * 100) | sh.grep("aaaa") | sh.wc("-l")
     assert process.execute().stdout().strip() == "102400"
 
 
@@ -33,7 +33,7 @@ def test_pipe_errors(test):
     assert pytest.raises(psh.ExecutionError,
         lambda: process.execute()).value.status() == 1
 
-    process = sh.echo("aaa") | sh.grep("bbb", _ok_statuses = [ 0, 1 ]) | sh.wc("-l")
+    process = sh.echo("aaa") | sh.grep("bbb", _ok_statuses=(0, 1)) | sh.wc("-l")
     process.execute().stdout().strip() == "0"
 
 

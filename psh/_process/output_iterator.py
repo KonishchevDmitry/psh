@@ -91,7 +91,7 @@ class OutputIterator:
         return self.__pipe
 
 
-    def __finalize(self, check_status = True):
+    def __finalize(self, check_status=True):
         """Finalizes the iterator (on error or when we read all data)."""
 
         self.close()
@@ -109,7 +109,7 @@ class OutputIterator:
                     self.__poll.poll()
                     data = eintr_retry(os.read)(self.__pipe.read, psys.BUFSIZE)
                 except:
-                    self.__finalize(check_status = False)
+                    self.__finalize(check_status=False)
                     raise
 
                 if data:

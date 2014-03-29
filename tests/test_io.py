@@ -21,8 +21,8 @@ test.init(globals())
 def test_string_input(test):
     """Tests process input from string."""
 
-    assert sh.grep("тест", _stdin = "aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
-    assert sh.grep("тест", _stdin = psys.b("aaa\nтест\nbbb\n")).execute().stdout() == "тест\n"
+    assert sh.grep("тест", _stdin="aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
+    assert sh.grep("тест", _stdin=psys.b("aaa\nтест\nbbb\n")).execute().stdout() == "тест\n"
 
 
 def test_iterator_input(test):
@@ -34,7 +34,7 @@ def test_iterator_input(test):
         for i in range(0, 10):
             yield "\n" + str(i) if i else str(i)
 
-    assert sh.cat(_stdin = func()).execute().stdout() == stdout
+    assert sh.cat(_stdin=func()).execute().stdout() == stdout
 
 
 def test_file_object_input(test):
@@ -48,17 +48,17 @@ def test_file_object_input(test):
         temp_file.flush()
 
         with open(temp_file.name, "rb") as stdin:
-            assert sh.cat(_stdin = stdin).execute().raw_stdout() == stdout
+            assert sh.cat(_stdin=stdin).execute().raw_stdout() == stdout
 
 
 def test_invalid_input(test):
     """Tests invalid input."""
 
     with pytest.raises(psh.InvalidArgument):
-        sh.grep(_stdin = 3)
+        sh.grep(_stdin=3)
 
     with pytest.raises(psh.InvalidArgument):
-        sh.grep("1", _stdin = iter([ 1 ])).execute()
+        sh.grep("1", _stdin=iter([1])).execute()
 
 
 
@@ -98,7 +98,7 @@ def test_large_output(test):
         stderr_tempfile.flush()
 
         process = sh.sh("-c", "cat {stdout} & pid=$!; cat {stderr} >&2; wait $pid;".format(
-            stdout = stdout_tempfile.name, stderr = stderr_tempfile.name)).execute()
+            stdout=stdout_tempfile.name, stderr=stderr_tempfile.name)).execute()
 
         assert process.raw_stdout() == stdout
         assert process.raw_stderr() == stderr
@@ -121,12 +121,12 @@ def test_output_after_process_termination(test):
     assert process.stderr() == ""
 
     error = pytest.raises(psh.ProcessOutputWasTruncated,
-        lambda: sh.sh(*command, _wait_for_output = False).execute()).value
+        lambda: sh.sh(*command, _wait_for_output=False).execute()).value
     assert error.status() == 0
     assert error.stdout() == "aaa\n"
     assert error.stderr() == ""
 
-    process = sh.sh(*command, _wait_for_output = False, _truncate_output = True).execute()
+    process = sh.sh(*command, _wait_for_output=False, _truncate_output=True).execute()
     assert process.status() == 0
     assert process.stdout() == "aaa\n"
     assert process.stderr() == ""

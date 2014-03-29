@@ -54,22 +54,22 @@ def test_command_arguments(test):
     )
     assert bytes(process) == psys.b(str(process))
 
-    process = sh.test("space arg", s = "short_arg")
+    process = sh.test("space arg", s="short_arg")
     assert process.command() == [ "test", "-s", "short_arg", "space arg" ]
     assert str(process) == "test -s short_arg 'space arg'"
     assert bytes(process) == psys.b(str(process))
 
-    process = sh.test("arg", long_long_arg = "long arg")
+    process = sh.test("arg", long_long_arg="long arg")
     assert process.command() == [ "test", "--long-long-arg", "long arg", "arg" ]
     assert str(process) == "test --long-long-arg 'long arg' arg"
     assert bytes(process) == psys.b(str(process))
 
-    process = sh.test("arg", bool_arg = True)
+    process = sh.test("arg", bool_arg=True)
     assert process.command() == [ "test", "--bool-arg", "arg" ]
     assert str(process) == "test --bool-arg arg"
     assert bytes(process) == psys.b(str(process))
 
-    process = sh.test("arg", bool_arg = False)
+    process = sh.test("arg", bool_arg=False)
     assert process.command() == [ "test", "arg" ]
     assert str(process) == "test arg"
     assert bytes(process) == psys.b(str(process))
@@ -85,7 +85,7 @@ def test_invalid_command_arguments(test):
         sh.test(Class())
 
     with pytest.raises(psh.InvalidArgument):
-        sh.test(_invalid = None)
+        sh.test(_invalid=None)
 
 
 
@@ -114,7 +114,7 @@ def test_kill(test):
     """Tests kill()."""
 
     start_time = time.time()
-    process = sh.sleep("3").execute(wait = False)
+    process = sh.sleep("3").execute(wait=False)
     process.kill()
     assert process.wait() == 143
     assert time.time() < start_time + 1
@@ -125,7 +125,7 @@ def test_wait(test):
     """Tests wait()."""
 
     start_time = time.time()
-    process = sh.sleep("3").execute(wait = False)
+    process = sh.sleep("3").execute(wait=False)
     assert time.time() < start_time + 1
     assert process.wait() == 0
     assert time.time() >= start_time + 3
@@ -134,20 +134,20 @@ def test_wait(test):
 def test_wait_status(test):
     """Tests wait() return value."""
 
-    assert sh.true().execute(wait = False).wait() == 0
-    assert sh.true().execute(wait = False).wait(check_status = True) == 0
+    assert sh.true().execute(wait=False).wait() == 0
+    assert sh.true().execute(wait=False).wait(check_status=True) == 0
 
-    assert sh.false().execute(wait = False).wait() == 1
+    assert sh.false().execute(wait=False).wait() == 1
     assert pytest.raises(psh.ExecutionError,
-        lambda: sh.false().execute(wait = False).wait(check_status = True)).value.status() == 1
+        lambda: sh.false().execute(wait=False).wait(check_status=True)).value.status() == 1
 
 
 def test_wait_with_kill(test):
     """Tests wait(kill = ...)."""
 
     start_time = time.time()
-    process = sh.sleep("3").execute(wait = False)
-    assert process.wait(kill = signal.SIGTERM) == 143
+    process = sh.sleep("3").execute(wait=False)
+    assert process.wait(kill=signal.SIGTERM) == 143
     assert time.time() < start_time + 1
 
 
@@ -182,9 +182,9 @@ def test_nonexisting_command(test):
 def test_ok_statuses(test):
     """Tests _ok_statuses option."""
 
-    assert sh.false(_ok_statuses = [ 0, 1 ] ).execute().status() == 1
+    assert sh.false(_ok_statuses=(0, 1)).execute().status() == 1
     assert pytest.raises(psh.ExecutionError,
-        lambda: sh.true(_ok_statuses = []).execute()).value.status() == 0
+        lambda: sh.true(_ok_statuses=[]).execute()).value.status() == 0
 
 
 
@@ -194,7 +194,7 @@ def test_defer(test):
     with pytest.raises(psh.InvalidProcessState):
         sh.true().status()
 
-    assert sh.true(_defer = False).status() == 0
+    assert sh.true(_defer=False).status() == 0
 
 
 
@@ -202,8 +202,8 @@ def test_environment(test):
     """Tests overriding process environment variables."""
 
     assert sh.env().execute().stdout() != ""
-    assert sh.env(_env = {}).execute().stdout() == ""
-    assert sh.env(_env = { "psh_environ_test": "тест" }).execute().stdout() == "psh_environ_test=тест\n"
+    assert sh.env(_env={}).execute().stdout() == ""
+    assert sh.env(_env={ "psh_environ_test": "тест" }).execute().stdout() == "psh_environ_test=тест\n"
 
 
 
@@ -213,7 +213,7 @@ def test_program_customization(test):
     with pytest.raises(psh.InvalidProcessState):
         sh.true().status()
 
-    true = psh.Program("true", _defer = False)
+    true = psh.Program("true", _defer=False)
     assert true().status() == 0
 
 
@@ -223,7 +223,7 @@ def test_sh_customization(test):
     with pytest.raises(psh.InvalidProcessState):
         sh.true().status()
 
-    csh = psh.Sh(_defer = False)
+    csh = psh.Sh(_defer=False)
     assert csh.true().status() == 0
 
 
@@ -236,7 +236,7 @@ def test_on_execute(test):
     def func(process):
         state["executed"] = True
 
-    process = sh.true(_on_execute = func)
+    process = sh.true(_on_execute=func)
     assert state["executed"] == False
 
     process.execute()
@@ -259,7 +259,7 @@ def test_on_execute_with_exeption(test):
         else:
             raise NotAllowed()
 
-    process = sh.true(_on_execute = func)
+    process = sh.true(_on_execute=func)
     assert state["executed"] == False
 
     with pytest.raises(NotAllowed):

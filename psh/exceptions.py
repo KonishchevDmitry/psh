@@ -19,7 +19,7 @@ class ExecutionError(Error):
     code.
     """
 
-    def __init__(self, command, status, stdout, stderr, error = None):
+    def __init__(self, command, status, stdout, stderr, error=None):
         self.__command = command
         self.__status = status
         self.__stdout = stdout
@@ -32,8 +32,8 @@ class ExecutionError(Error):
                 pass
 
             error = 'Program "{command}" terminated with an error status {status}{details}'.format(
-                command = self.command(), status = self.status(),
-                details = ": " + error if error else "")
+                command=self.command(), status=self.status(),
+                details=": " + error if error else "")
 
         super(ExecutionError, self).__init__(error)
 
@@ -117,4 +117,4 @@ class ProcessOutputWasTruncated(ExecutionError):
 
     def __init__(self, command, status, stdout, stderr):
         super(ProcessOutputWasTruncated, self).__init__(
-            command, status, stdout, stderr, error = "The process' output was truncated")
+            command, status, stdout, stderr, error="The process' output was truncated")

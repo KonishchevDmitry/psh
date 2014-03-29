@@ -64,7 +64,7 @@ class File(object):
     A class to configure redirection of stdin/stdout/stderr from/to a file.
     """
 
-    def __init__(self, path, append = False):
+    def __init__(self, path, append=False):
         self.path = path
         self.append = append
 
@@ -315,7 +315,7 @@ class Process:
             self, self.__iter_raw, self.__iter_delimiter)
 
         try:
-            self._execute(stdout = iterator.pipe())
+            self._execute(stdout=iterator.pipe())
 
             with self.__lock:
                 self.__context_objects.append(weakref.ref(iterator))
@@ -359,7 +359,7 @@ class Process:
         return self.__command[:]
 
 
-    def execute(self, wait = True, check_status = True):
+    def execute(self, wait=True, check_status=True):
         """Executes the command.
 
         :param wait: if :py:const:`True`, calls ``wait(check_status =
@@ -370,12 +370,12 @@ class Process:
         self._execute()
 
         if wait:
-            self.wait(check_status = check_status)
+            self.wait(check_status=check_status)
 
         return self
 
 
-    def kill(self, signal = signal.SIGTERM):
+    def kill(self, signal=signal.SIGTERM):
         """Kills the process.
 
         :param signal: signal which will be used to kill the process.
@@ -448,7 +448,7 @@ class Process:
         return psys.u(self.raw_stdout())
 
 
-    def wait(self, check_status = False, kill = None):
+    def wait(self, check_status=False, kill=None):
         """Waits for the process termination.
 
         :param check_status: if :py:const:`True`, check the process status
@@ -478,7 +478,7 @@ class Process:
 
         if self.__piped_from_process():
             self.__stdin_source.wait(
-                check_status = check_status, kill = kill)
+                check_status=check_status, kill=kill)
 
         if check_status:
             if self.__error is not None:
@@ -491,7 +491,7 @@ class Process:
         return self.__status
 
 
-    def _execute(self, stdout = None, check_pipes = True):
+    def _execute(self, stdout=None, check_pipes=True):
         """Executes the command."""
 
         if self.__on_execute is not None:
@@ -518,7 +518,7 @@ class Process:
                 self.__piped_from_process() and
                 self.__stdin_source._state() >= _PROCESS_STATE_RUNNING
             ):
-                self.__stdin_source.wait(kill = signal.SIGTERM)
+                self.__stdin_source.wait(kill=signal.SIGTERM)
 
             raise
 
@@ -665,7 +665,7 @@ class Process:
                     2: "stderr",
                 }
 
-                def redirect_fd(path, fd, write = True, append = False):
+                def redirect_fd(path, fd, write=True, append=False):
                     try:
                         if write:
                             file_fd = eintr_retry(os.open)(
@@ -697,7 +697,7 @@ class Process:
 
                 # Configure stdin
                 if isinstance(self.__stdin_source, File):
-                    redirect_fd(self.__stdin_source.path, psys.STDIN_FILENO, write = False)
+                    redirect_fd(self.__stdin_source.path, psys.STDIN_FILENO, write=False)
 
                 # Configure stdout
                 if self.__stdout_target is STDERR:
@@ -707,7 +707,7 @@ class Process:
                         raise Error("Unable to redirect stderr to stdout: {0}", psys.e(e))
                 elif isinstance(self.__stdout_target, File):
                     redirect_fd(self.__stdout_target.path, psys.STDOUT_FILENO,
-                        append = self.__stdout_target.append)
+                        append=self.__stdout_target.append)
 
                 # Configure stderr
                 if self.__stderr_target is STDOUT:
@@ -717,7 +717,7 @@ class Process:
                         raise Error("Unable to redirect stderr to stdout: {0}", psys.e(e))
                 elif isinstance(self.__stderr_target, File):
                     redirect_fd(self.__stderr_target.path, psys.STDERR_FILENO,
-                        append = self.__stderr_target.append)
+                        append=self.__stderr_target.append)
 
                 # Required when we have C locale
                 command = [ psys.b(arg) for arg in self.__command ]
@@ -733,7 +733,7 @@ class Process:
                     exit_code = 126
 
                 print("Failed to execute '{program}': {error}.".format(
-                    program = self.__program, error = psys.e(e)), file = sys.stderr)
+                    program=self.__program, error=psys.e(e)), file=sys.stderr)
         finally:
             os._exit(exit_code)
 
@@ -778,7 +778,7 @@ class Process:
             eintr_retry(fcntl.fcntl)(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
             poll.register(fd, poll.POLLIN if pipe.output else poll.POLLOUT)
-            pipe.close(read = not pipe.output, write = pipe.output)
+            pipe.close(read=not pipe.output, write=pipe.output)
             poll_objects += 1
         # Configure the poll object and pipes <--
 
@@ -931,11 +931,10 @@ class Process:
         elif self.__piped_from_process():
             # Connect and execute all processes in the pipe
 
-            pipe = Pipe(psys.STDIN_FILENO, output = False)
+            pipe = Pipe(psys.STDIN_FILENO, output=False)
             self.__pipes.append(pipe)
 
-            self.__stdin_source._execute(
-                stdout = pipe, check_pipes = False)
+            self.__stdin_source._execute(stdout=pipe, check_pipes=False)
         else:
             if type(self.__stdin_source) in ( bytes, str ):
                 self.__stdin_generator = iter([ self.__stdin_source ])
@@ -946,7 +945,7 @@ class Process:
             else:
                 raise LogicalError()
 
-            pipe = Pipe(psys.STDIN_FILENO, output = False)
+            pipe = Pipe(psys.STDIN_FILENO, output=False)
             self.__pipes.append(pipe)
         # stdin <--
 
@@ -955,7 +954,7 @@ class Process:
             if stdout is not None:
                 raise LogicalError()
         elif self.__stdout_target is PIPE or self.__piped_to_process():
-            self.__pipes.append(Pipe(psys.STDOUT_FILENO, pipe = stdout))
+            self.__pipes.append(Pipe(psys.STDOUT_FILENO, pipe=stdout))
         else:
             raise LogicalError()
         # stdout <--
@@ -995,8 +994,8 @@ class Process:
 
             try:
                 self.__communication_thread = threading.Thread(
-                    target = self.__communication_thread_func,
-                    args = [ fork_lock, poll ])
+                    target=self.__communication_thread_func,
+                    args=[ fork_lock, poll ])
 
                 self.__communication_thread.daemon = True
                 self.__communication_thread.start()
@@ -1013,7 +1012,7 @@ class Process:
 
             try:
                 self.__wait_thread = threading.Thread(
-                    target = self.__wait_pid_thread, args = [ fork_lock, termination_fd ])
+                    target=self.__wait_pid_thread, args=[fork_lock, termination_fd])
                 self.__wait_thread.daemon = True
                 self.__wait_thread.start()
             except BaseException as error:
@@ -1034,18 +1033,18 @@ class Process:
         # Fork the process <--
 
 
-    def __join_threads(self, timeout = None):
+    def __join_threads(self, timeout=None):
         """Joins all spawned threads."""
 
         if timeout is not None:
             end_time = time.time() + timeout
 
         if not psys.join_thread(self.__wait_thread,
-            timeout = None if timeout is None else end_time - time.time()):
+            timeout=None if timeout is None else end_time - time.time()):
             return False
 
         if not psys.join_thread(self.__communication_thread,
-            timeout = None if timeout is None else end_time - time.time()):
+            timeout=None if timeout is None else end_time - time.time()):
             return False
 
         return True
@@ -1061,7 +1060,7 @@ class Process:
         """Parses command arguments and options."""
 
         # Process options -->
-        def check_arg(option, value, types = tuple(), instance_of = tuple(), values = tuple()):
+        def check_arg(option, value, types=tuple(), instance_of=tuple(), values=tuple()):
             if type(value) not in types and not isinstance(value, instance_of) and value not in values:
                 raise InvalidArgument("Invalid value for option {0}", option)
 
@@ -1072,43 +1071,43 @@ class Process:
                 continue
 
             if option == "_defer":
-                self.__defer = check_arg(option, value, types = ( bool, ))
+                self.__defer = check_arg(option, value, types=( bool, ))
             elif option == "_env":
                 if value is None:
                     self.__env = value
                 else:
                     self.__env = dict(
                         (
-                            psys.b(check_arg(option, k, types = ( bytes, str ))),
-                            psys.b(check_arg(option, v, types = ( bytes, str )))
+                            psys.b(check_arg(option, k, types=(bytes, str))),
+                            psys.b(check_arg(option, v, types=(bytes, str)))
                         )
                             for k, v in value.items() )
             elif option == "_iter_delimiter":
                 self.__iter_delimiter = psys.b(
-                    check_arg(option, value, types = ( bytes, str )))
+                    check_arg(option, value, types=( bytes, str )))
             elif option == "_iter_raw":
-                self.__iter_raw = check_arg(option, value, types = ( bool, ))
+                self.__iter_raw = check_arg(option, value, types=( bool, ))
             elif option == "_ok_statuses":
                 self.__ok_statuses = [
-                    check_arg(option, status, types = ( int, )) for status in value ]
+                    check_arg(option, status, types=(int,)) for status in value ]
             elif option == "_on_execute":
-                self.__on_execute = check_arg(option, value, instance_of = collections.Callable)
+                self.__on_execute = check_arg(option, value, instance_of=collections.Callable)
             elif option == "_shell":
-                self.__shell = check_arg(option, value, types = ( bool, ))
+                self.__shell = check_arg(option, value, types=( bool, ))
             elif option == "_stderr":
                 self.__stderr_target = check_arg(
-                    option, value, instance_of = File, values = ( STDOUT, STDERR, PIPE ))
+                    option, value, instance_of=File, values=( STDOUT, STDERR, PIPE ))
             elif option == "_stdin":
-                self.__stdin_source = check_arg(option, value, types = ( bytes, str ),
+                self.__stdin_source = check_arg(option, value, types=( bytes, str ),
                     instance_of = ( File, collections.Iterator, collections.Iterable ),
                     values = ( STDIN, ))
             elif option == "_stdout":
                 self.__stdout_target = check_arg(
-                    option, value, instance_of = File, values = ( STDOUT, STDERR, PIPE ))
+                    option, value, instance_of=File, values=( STDOUT, STDERR, PIPE ))
             elif option == "_truncate_output":
-                self.__truncate_output = check_arg(option, value, types = ( bool, ))
+                self.__truncate_output = check_arg(option, value, types=( bool, ))
             elif option == "_wait_for_output":
-                self.__wait_for_output = check_arg(option, value, types = ( bool, ))
+                self.__wait_for_output = check_arg(option, value, types=( bool, ))
             else:
                 raise InvalidArgument("Invalid option: {0}", option)
         # Process options <--

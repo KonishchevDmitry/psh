@@ -32,18 +32,18 @@ Complete documentation is available at http://konishchevdmitry.github.com/psh/\
 
 if __name__ == "__main__":
     setup(
-        name = "psh",
-        version = "0.2.4",
+        name="psh",
+        version="0.2.4",
 
-        description = "Process management library",
-        long_description = description,
-        url = "http://konishchevdmitry.github.com/psh/",
+        description="Process management library",
+        long_description=description,
+        url="http://konishchevdmitry.github.com/psh/",
 
-        license = "GPL3",
-        author = "Dmitry Konishchev",
-        author_email = "konishchev@gmail.com",
+        license="GPL3",
+        author="Dmitry Konishchev",
+        author_email="konishchev@gmail.com",
 
-        classifiers = [
+        classifiers=[
             "Development Status :: 4 - Beta",
             "Intended Audience :: Developers",
             "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
@@ -54,11 +54,11 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3",
             "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-        platforms = [ "unix", "linux", "osx" ],
+        platforms=[ "unix", "linux", "osx" ],
 
-        install_requires = [ "pcore", "psys >= 0.3" ],
-        packages = find_packages(),
+        install_requires=[ "pcore", "psys >= 0.3" ],
+        packages=find_packages(),
 
-        cmdclass = { "test": PyTest },
-        tests_require = [ "pcore", "psys >= 0.3", "pytest" ],
+        cmdclass={ "test": PyTest },
+        tests_require=[ "pcore", "psys >= 0.3", "pytest" ],
     )

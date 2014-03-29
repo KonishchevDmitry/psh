@@ -20,13 +20,13 @@ def test_disabling_stdin_redirection(test, capfd):
 
     process = Program(sys.executable)("-c",
         '__import__("psh").sh.cat(_stdout = __import__("psh").STDOUT, _defer = False)',
-        _defer = False, _stdin = "aaa\nbbb\nccc\n")
+        _defer=False, _stdin="aaa\nbbb\nccc\n")
     assert process.stdout() == ""
     assert process.stderr() == ""
 
     process = Program(sys.executable)("-c",
         '__import__("psh").sh.grep("bbb", _stdin = __import__("psh").STDIN, _stdout = __import__("psh").STDOUT, _defer = False)',
-        _defer = False, _stdin = "aaa\nbbb\nccc\n")
+        _defer=False, _stdin="aaa\nbbb\nccc\n")
     assert process.stdout() == "bbb\n"
     assert process.stderr() == ""
 
@@ -41,7 +41,7 @@ def test_stdin_from_file(test, capfd):
             temp_file.write(psys.b("test\nтест"))
             temp_file.flush()
 
-            process = sh.tr("t", "z", _stdin = File(temp_file.name)).execute()
+            process = sh.tr("t", "z", _stdin=File(temp_file.name)).execute()
 
             assert process.stdout() == "zesz\nтест"
             assert process.stderr() == ""
@@ -59,7 +59,7 @@ def test_stdout(test, capfd):
     logging.disable(logging.CRITICAL)
 
     try:
-        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stdout = STDOUT)
+        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stdout=STDOUT)
         process.execute()
 
         assert process.stdout() == ""
@@ -78,7 +78,7 @@ def test_stderr(test, capfd):
     logging.disable(logging.CRITICAL)
 
     try:
-        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stderr = STDERR)
+        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stderr=STDERR)
         process.execute()
 
         assert process.stdout() == "test1\nтест3\n"
@@ -97,7 +97,7 @@ def test_stdout_to_stderr_redirection(test, capfd):
     logging.disable(logging.CRITICAL)
 
     try:
-        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stdout = STDERR)
+        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stdout=STDERR)
         process.execute()
 
         assert process.stdout() == ""
@@ -116,7 +116,7 @@ def test_stderr_to_stdout_redirection(test, capfd):
     logging.disable(logging.CRITICAL)
 
     try:
-        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stderr = STDOUT)
+        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stderr=STDOUT)
         process.execute()
 
         assert process.stdout() == "test1\ntest2\nтест3\nтест4\n"
@@ -135,7 +135,7 @@ def test_stdout_and_stderr(test, capfd):
     logging.disable(logging.CRITICAL)
 
     try:
-        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stdout = STDOUT, _stderr = STDERR)
+        process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;", _stdout=STDOUT, _stderr=STDERR)
         process.execute()
 
         assert process.stdout() == ""
@@ -156,7 +156,7 @@ def test_stdout_to_file_and_stderr_to_dev_null(test, capfd):
     try:
         with tempfile.NamedTemporaryFile() as temp_file:
             process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;",
-                _stdout = File(temp_file.name), _stderr = DEVNULL)
+                _stdout=File(temp_file.name), _stderr=DEVNULL)
             process.execute()
 
             assert process.stdout() == ""
@@ -179,7 +179,7 @@ def test_stdout_to_dev_null_and_stderr_to_file(test, capfd):
     try:
         with tempfile.NamedTemporaryFile() as temp_file:
             process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;",
-                _stdout = DEVNULL, _stderr = File(temp_file.name))
+                _stdout=DEVNULL, _stderr=File(temp_file.name))
             process.execute()
 
             assert process.stdout() == ""
@@ -205,7 +205,7 @@ def test_stdout_to_file_with_append(test, capfd):
             temp_file.flush()
 
             process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;",
-                _stdout = File(temp_file.name, append = True))
+                _stdout=File(temp_file.name, append=True))
             process.execute()
 
             assert process.stdout() == ""
@@ -232,7 +232,7 @@ def test_stderr_to_file_with_append(test, capfd):
             temp_file.flush()
 
             process = sh.sh("-c", "echo test1; echo test2 >&2; echo тест3; echo тест4 >&2;",
-                _stderr = File(temp_file.name, append = True))
+                _stderr=File(temp_file.name, append=True))
             process.execute()
 
             assert process.stdout() == "test1\nтест3\n"

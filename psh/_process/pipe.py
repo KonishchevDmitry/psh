@@ -18,7 +18,7 @@ LOG = logging.getLogger(__name__)
 class Pipe():
     """Represents a pipe between two processes."""
 
-    def __init__(self, source, output = True, pipe = None):
+    def __init__(self, source, output=True, pipe=None):
         # File descriptor that we are going to replace by this pipe
         self.source = source
 
@@ -47,7 +47,7 @@ class Pipe():
             self.close()
 
 
-    def close(self, read = True, write = True):
+    def close(self, read=True, write=True):
         """Closes the pipe."""
 
         if read and self.read is not None:

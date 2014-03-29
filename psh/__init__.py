@@ -36,7 +36,7 @@ class Program:
 
     def __init__(self, program, *default_args, **default_options):
         # Default process arguments
-        self.__args = ( program, ) + default_args
+        self.__args = (program,) + default_args
 
         # Default process options
         self.__options = default_options

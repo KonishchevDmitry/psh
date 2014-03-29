@@ -23,10 +23,10 @@ def check_leaks(request):
         else:
             fd_path = "/proc/self/fd"
 
-        return set( int(fd) for fd in os.listdir(fd_path) )
+        return set(int(fd) for fd in os.listdir(fd_path))
 
     def running_threads():
-        return set( thread.ident for thread in threading.enumerate() )
+        return set(thread.ident for thread in threading.enumerate())
 
     def process_childs():
         process = subprocess.Popen(

@@ -25,7 +25,7 @@ def test_output_iteration(test):
 
 
     with sh.cat(_stdin="aaa\nтест\nbbb") as process:
-        stdout=[ line for line in process ]
+        stdout = [ line for line in process ]
 
     assert stdout == [ "aaa\n", "тест\n", "bbb" ]
 

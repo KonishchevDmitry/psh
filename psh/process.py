@@ -530,7 +530,7 @@ class Process:
             if self.__state != _PROCESS_STATE_PENDING:
                 raise InvalidProcessState("Process can't be piped after execution")
 
-            if self.__stdin_source not in ( None, STDIN ):
+            if self.__stdin_source not in (None, STDIN):
                 raise InvalidOperation("The process' stdin is already redirected")
 
             LOG.debug("Creating a pipe: %s | %s", process, self)
@@ -580,11 +580,11 @@ class Process:
             if isinstance(stdin_source, File):
                 stream.write(b" < ")
                 write_arg(stream, stdin_source.path)
-            elif stdin_source in ( None, STDIN ) or isinstance(stdin_source, Process):
+            elif stdin_source in (None, STDIN) or isinstance(stdin_source, Process):
                 pass
             elif (
-                type(stdin_source) in ( bytes, str ) or
-                isinstance(stdin_source, ( collections.Iterator, collections.Iterable ))
+                type(stdin_source) in (bytes, str) or
+                isinstance(stdin_source, (collections.Iterator, collections.Iterable))
             ):
                 raise InvalidOperation(
                     "String and iterator input is not supported for serialization to a shell script")
@@ -592,7 +592,7 @@ class Process:
                 raise LogicalError()
 
             # Stdout redirection
-            if self.__piped_to_process() or self.__stdout_target in ( STDOUT, PIPE ):
+            if self.__piped_to_process() or self.__stdout_target in (STDOUT, PIPE):
                 pass
             elif self.__stdout_target is STDERR:
                 stream.write(b" >&2")
@@ -603,7 +603,7 @@ class Process:
                 raise LogicalError()
 
             # Stderr redirection
-            if self.__stderr_target in ( STDERR, PIPE ):
+            if self.__stderr_target in (STDERR, PIPE):
                 pass
             elif self.__stderr_target is STDOUT:
                 stream.write(b" 2>&1")
@@ -669,7 +669,7 @@ class Process:
                     try:
                         if write:
                             file_fd = eintr_retry(os.open)(
-                                path, os.O_WRONLY | os.O_CREAT | ( os.O_APPEND if append else 0 ), 0o666)
+                                path, os.O_WRONLY | os.O_CREAT | (os.O_APPEND if append else 0), 0o666)
                         else:
                             file_fd = eintr_retry(os.open)(path, os.O_RDONLY)
 
@@ -720,7 +720,7 @@ class Process:
                         append=self.__stderr_target.append)
 
                 # Required when we have C locale
-                command = [ psys.b(arg) for arg in self.__command ]
+                command = [psys.b(arg) for arg in self.__command]
 
                 exec_error = True
 
@@ -808,7 +808,7 @@ class Process:
                             stdin = next(self.__stdin_generator)
 
                             try:
-                                if type(stdin) not in ( bytes, str ):
+                                if type(stdin) not in (bytes, str):
                                     raise TypeError("must be a string")
 
                                 stdin = psys.b(stdin)
@@ -841,7 +841,7 @@ class Process:
                             else:
                                 stdin = stdin[size:]
                 # stdout/stderr
-                elif pipe.source in ( psys.STDOUT_FILENO, psys.STDERR_FILENO ):
+                elif pipe.source in (psys.STDOUT_FILENO, psys.STDERR_FILENO):
                     data = eintr_retry(os.read)(fd, psys.BUFSIZE)
 
                     if data:
@@ -865,7 +865,7 @@ class Process:
 
             for pipe in self.__pipes:
                 if (
-                    pipe.source in ( psys.STDOUT_FILENO, psys.STDERR_FILENO ) and
+                    pipe.source in (psys.STDOUT_FILENO, psys.STDERR_FILENO) and
                     pipe.read is not None
                 ):
                     size = 0
@@ -936,8 +936,8 @@ class Process:
 
             self.__stdin_source._execute(stdout=pipe, check_pipes=False)
         else:
-            if type(self.__stdin_source) in ( bytes, str ):
-                self.__stdin_generator = iter([ self.__stdin_source ])
+            if type(self.__stdin_source) in (bytes, str):
+                self.__stdin_generator = iter([self.__stdin_source])
             elif isinstance(self.__stdin_source, collections.Iterator):
                 self.__stdin_generator = self.__stdin_source
             elif isinstance(self.__stdin_source, collections.Iterable):
@@ -950,7 +950,7 @@ class Process:
         # stdin <--
 
         # stdout -->
-        if self.__stdout_target in ( STDOUT, STDERR ) or isinstance(self.__stdout_target, File):
+        if self.__stdout_target in (STDOUT, STDERR) or isinstance(self.__stdout_target, File):
             if stdout is not None:
                 raise LogicalError()
         elif self.__stdout_target is PIPE or self.__piped_to_process():
@@ -960,7 +960,7 @@ class Process:
         # stdout <--
 
         # stderr -->
-        if self.__stderr_target in ( STDOUT, STDERR ) or isinstance(self.__stderr_target, File):
+        if self.__stderr_target in (STDOUT, STDERR) or isinstance(self.__stderr_target, File):
             pass
         elif self.__stderr_target is PIPE:
             self.__pipes.append(Pipe(psys.STDERR_FILENO))
@@ -995,7 +995,7 @@ class Process:
             try:
                 self.__communication_thread = threading.Thread(
                     target=self.__communication_thread_func,
-                    args=[ fork_lock, poll ])
+                    args=(fork_lock, poll))
 
                 self.__communication_thread.daemon = True
                 self.__communication_thread.start()
@@ -1071,7 +1071,7 @@ class Process:
                 continue
 
             if option == "_defer":
-                self.__defer = check_arg(option, value, types=( bool, ))
+                self.__defer = check_arg(option, value, types=(bool,))
             elif option == "_env":
                 if value is None:
                     self.__env = value
@@ -1081,33 +1081,33 @@ class Process:
                             psys.b(check_arg(option, k, types=(bytes, str))),
                             psys.b(check_arg(option, v, types=(bytes, str)))
                         )
-                            for k, v in value.items() )
+                            for k, v in value.items())
             elif option == "_iter_delimiter":
                 self.__iter_delimiter = psys.b(
-                    check_arg(option, value, types=( bytes, str )))
+                    check_arg(option, value, types=(bytes, str)))
             elif option == "_iter_raw":
-                self.__iter_raw = check_arg(option, value, types=( bool, ))
+                self.__iter_raw = check_arg(option, value, types=(bool,))
             elif option == "_ok_statuses":
                 self.__ok_statuses = [
                     check_arg(option, status, types=(int,)) for status in value ]
             elif option == "_on_execute":
                 self.__on_execute = check_arg(option, value, instance_of=collections.Callable)
             elif option == "_shell":
-                self.__shell = check_arg(option, value, types=( bool, ))
+                self.__shell = check_arg(option, value, types=(bool,))
             elif option == "_stderr":
                 self.__stderr_target = check_arg(
-                    option, value, instance_of=File, values=( STDOUT, STDERR, PIPE ))
+                    option, value, instance_of=File, values=(STDOUT, STDERR, PIPE))
             elif option == "_stdin":
-                self.__stdin_source = check_arg(option, value, types=( bytes, str ),
-                    instance_of = ( File, collections.Iterator, collections.Iterable ),
-                    values = ( STDIN, ))
+                self.__stdin_source = check_arg(option, value, types=(bytes, str),
+                    instance_of=(File, collections.Iterator, collections.Iterable),
+                    values=(STDIN,))
             elif option == "_stdout":
                 self.__stdout_target = check_arg(
-                    option, value, instance_of=File, values=( STDOUT, STDERR, PIPE ))
+                    option, value, instance_of=File, values=(STDOUT, STDERR, PIPE))
             elif option == "_truncate_output":
-                self.__truncate_output = check_arg(option, value, types=( bool, ))
+                self.__truncate_output = check_arg(option, value, types=(bool,))
             elif option == "_wait_for_output":
-                self.__wait_for_output = check_arg(option, value, types=( bool, ))
+                self.__wait_for_output = check_arg(option, value, types=(bool,))
             else:
                 raise InvalidArgument("Invalid option: {0}", option)
         # Process options <--
@@ -1183,11 +1183,11 @@ class Process:
                 for c in """ '"\\\r\n\t""":
                     if c in arg:
                         for replacement in (
-                            ( "\\", r"\\" ),
-                            ( "'",  r"\'" ),
-                            ( "\r", r"\r" ),
-                            ( "\n", r"\n" ),
-                            ( "\t", r"\t" ),
+                            ("\\", r"\\"),
+                            ("'",  r"\'"),
+                            ("\r", r"\r"),
+                            ("\n", r"\n"),
+                            ("\t", r"\t"),
                         ):
                             arg = arg.replace(*replacement)
 
@@ -1248,9 +1248,9 @@ class Process:
 def _get_arg_value(value, shell):
     """Returns an argument string value."""
 
-    if type(value) in ( bytes, str ):
+    if type(value) in (bytes, str):
         return value
-    elif type(value) in ( int, float ) + ( tuple() if PY3 else (long,) ):
+    elif type(value) in (int, float) + (tuple() if PY3 else (long,)):
         return str(value)
     elif shell and isinstance(value, Process):
         return value._shell_command_full()

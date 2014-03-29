@@ -237,10 +237,10 @@ def test_on_execute(test):
         state["executed"] = True
 
     process = sh.true(_on_execute=func)
-    assert state["executed"] == False
+    assert state["executed"] is False
 
     process.execute()
-    assert state["executed"] == True
+    assert state["executed"] is True
 
 
 
@@ -260,12 +260,12 @@ def test_on_execute_with_exeption(test):
             raise NotAllowed()
 
     process = sh.true(_on_execute=func)
-    assert state["executed"] == False
+    assert state["executed"] is False
 
     with pytest.raises(NotAllowed):
         process.execute()
-    assert state["executed"] == False
+    assert state["executed"] is False
 
     allow = True
     process.execute()
-    assert state["executed"] == True
+    assert state["executed"] is True

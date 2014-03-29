@@ -23,17 +23,17 @@ def test_command_arguments(test):
     """Tests command argument parsing."""
 
     process = sh.test()
-    assert process.command() == [ "test" ]
+    assert process.command() == ["test"]
     assert str(process) == "test"
     assert bytes(process) == psys.b(str(process))
 
     process = sh.complex_command_name()
-    assert process.command() == [ "complex-command-name" ]
+    assert process.command() == ["complex-command-name"]
     assert str(process) == "complex-command-name"
     assert bytes(process) == psys.b(str(process))
 
     process = sh("complex command name")("arg1", "arg2")
-    assert process.command() == [ "complex command name", "arg1", "arg2" ]
+    assert process.command() == ["complex command name", "arg1", "arg2"]
     assert str(process) == "'complex command name' arg1 arg2"
     assert bytes(process) == psys.b(str(process))
 
@@ -42,7 +42,7 @@ def test_command_arguments(test):
         "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
         3, 2 ** 128, 2.0
     )
-    assert process.command() == [ "test",
+    assert process.command() == ["test",
         b"arg", b"space arg", b"carriage\rline", b"line\narg", b"tab\targ", br"slash\arg", b"quote'arg", b'quote"arg', psys.b("тест"), psys.b("тест тест"),
         "arg", "space arg", "carriage\rline", "line\narg", "tab\targ", r"slash\arg", "quote'arg", 'quote"arg', "тест", "тест тест",
         "3", "340282366920938463463374607431768211456", "2.0"
@@ -55,22 +55,22 @@ def test_command_arguments(test):
     assert bytes(process) == psys.b(str(process))
 
     process = sh.test("space arg", s="short_arg")
-    assert process.command() == [ "test", "-s", "short_arg", "space arg" ]
+    assert process.command() == ["test", "-s", "short_arg", "space arg"]
     assert str(process) == "test -s short_arg 'space arg'"
     assert bytes(process) == psys.b(str(process))
 
     process = sh.test("arg", long_long_arg="long arg")
-    assert process.command() == [ "test", "--long-long-arg", "long arg", "arg" ]
+    assert process.command() == ["test", "--long-long-arg", "long arg", "arg"]
     assert str(process) == "test --long-long-arg 'long arg' arg"
     assert bytes(process) == psys.b(str(process))
 
     process = sh.test("arg", bool_arg=True)
-    assert process.command() == [ "test", "--bool-arg", "arg" ]
+    assert process.command() == ["test", "--bool-arg", "arg"]
     assert str(process) == "test --bool-arg arg"
     assert bytes(process) == psys.b(str(process))
 
     process = sh.test("arg", bool_arg=False)
-    assert process.command() == [ "test", "arg" ]
+    assert process.command() == ["test", "arg"]
     assert str(process) == "test arg"
     assert bytes(process) == psys.b(str(process))
 

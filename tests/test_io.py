@@ -113,7 +113,7 @@ def test_large_output(test):
 def test_output_after_process_termination(test):
     """Tests execution of a process that terminates before its children."""
 
-    command = [ "-c", "echo aaa; ( sleep 1; echo bbb; )&" ]
+    command = ["-c", "echo aaa; ( sleep 1; echo bbb; )&"]
 
     process = sh.sh(*command).execute()
     assert process.status() == 0

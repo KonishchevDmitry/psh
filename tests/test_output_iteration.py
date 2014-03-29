@@ -20,14 +20,14 @@ def test_output_iteration(test):
     """Tests iteration over process' output."""
 
     with sh.cat(_stdin="") as process:
-        stdout = [ line for line in process ]
+        stdout = [line for line in process]
     assert stdout == []
 
 
     with sh.cat(_stdin="aaa\nтест\nbbb") as process:
-        stdout = [ line for line in process ]
+        stdout = [line for line in process]
 
-    assert stdout == [ "aaa\n", "тест\n", "bbb" ]
+    assert stdout == ["aaa\n", "тест\n", "bbb"]
 
     for line in stdout:
         assert type(line) == str
@@ -39,10 +39,10 @@ def test_output_iteration_with_large_data(test):
     (more than any buffer size).
     """
 
-    stdin = [ str(i) + "\n" for i in range(0, 100000) ]
+    stdin = [str(i) + "\n" for i in range(0, 100000)]
 
     with sh.cat(_stdin="".join(stdin)) as process:
-        stdout = [ line for line in process ]
+        stdout = [line for line in process]
 
     assert stdout == stdin
 
@@ -51,9 +51,9 @@ def test_output_iteration_with_raw_false(test):
     """Tests iteration over process' output with _iter_raw = False."""
 
     with sh.cat(_stdin="aaa\nтест\nbbb", _iter_raw=False) as process:
-        stdout = [ line for line in process ]
+        stdout = [line for line in process]
 
-    assert stdout == [ "aaa\n", "тест\n", "bbb" ]
+    assert stdout == ["aaa\n", "тест\n", "bbb"]
 
     for line in stdout:
         assert type(line) == str
@@ -63,9 +63,9 @@ def test_output_iteration_with_raw_true(test):
     """Tests iteration over process' output with _iter_raw = True."""
 
     with sh.cat(_stdin="aaa\nтест\nbbb", _iter_raw=True) as process:
-        stdout = [ line for line in process ]
+        stdout = [line for line in process]
 
-    assert stdout == [ b"aaa\n", psys.b("тест\n"), b"bbb" ]
+    assert stdout == [b"aaa\n", psys.b("тест\n"), b"bbb"]
 
     for line in stdout:
         assert type(line) == bytes
@@ -75,9 +75,9 @@ def test_output_iteration_option_delimiter(test):
     """Tests iteration over process' output with custom delimiter."""
 
     with sh.cat(_stdin="aa\ta\nте\tст\nbbb", _iter_delimiter="\t") as process:
-        stdout = [ line for line in process ]
+        stdout = [line for line in process]
 
-    assert stdout == [ "aa\t", "a\nте\t", "ст\nbbb" ]
+    assert stdout == ["aa\t", "a\nте\t", "ст\nbbb"]
 
 
 def test_output_iteration_without_delimiter_raw(test):

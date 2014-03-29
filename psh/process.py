@@ -243,7 +243,7 @@ class Process:
         self.__command = []
 
         # Success status codes for this command
-        self.__ok_statuses = [ os.EX_OK ]
+        self.__ok_statuses = [os.EX_OK]
 
 
         # Process' pipes
@@ -1089,7 +1089,7 @@ class Process:
                 self.__iter_raw = check_arg(option, value, types=(bool,))
             elif option == "_ok_statuses":
                 self.__ok_statuses = [
-                    check_arg(option, status, types=(int,)) for status in value ]
+                    check_arg(option, status, types=(int,)) for status in value]
             elif option == "_on_execute":
                 self.__on_execute = check_arg(option, value, instance_of=collections.Callable)
             elif option == "_shell":
@@ -1131,7 +1131,7 @@ class Process:
                     if value is not True:
                         self.__command.append(_get_arg_value(value, self.__shell))
 
-        self.__command += [ _get_arg_value(arg, self.__shell) for arg in args ]
+        self.__command += [_get_arg_value(arg, self.__shell) for arg in args]
         # Command arguments <--
 
 

@@ -30,7 +30,7 @@ def check_leaks(request):
 
     def process_childs():
         process = subprocess.Popen(
-            [ "ps", "-A", "-o", "ppid=,pid=,command=" ],
+            ["ps", "-A", "-o", "ppid=,pid=,command="],
             stdout=subprocess.PIPE)
 
         stdout = psys.u(process.communicate()[0])

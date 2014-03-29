@@ -9,7 +9,7 @@ from setuptools.command.test import test as Test
 class PyTest(Test):
     def finalize_options(self):
         Test.finalize_options(self)
-        self.test_args = [ "tests" ]
+        self.test_args = ["tests"]
         self.test_suite = True
 
     def run_tests(self):
@@ -54,11 +54,11 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3",
             "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-        platforms=[ "unix", "linux", "osx" ],
+        platforms=["unix", "linux", "osx"],
 
-        install_requires=[ "pcore", "psys >= 0.3" ],
+        install_requires=["pcore", "psys >= 0.3"],
         packages=find_packages(),
 
         cmdclass={ "test": PyTest },
-        tests_require=[ "pcore", "psys >= 0.3", "pytest" ],
+        tests_require=["pcore", "psys >= 0.3", "pytest"],
     )

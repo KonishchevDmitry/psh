@@ -37,6 +37,18 @@ def test_execution(test):
     assert process.stderr() == ""
 
 
+def test_argument_passing(test):
+    """Tests passing data via command line arguments."""
+
+    value = ""
+    for i in range(1, 256):
+        value += chr(i)
+
+    process = sh.sh("-c", sh.echo(value), _shell=True).execute()
+    assert process.stdout() == value + "\n"
+    assert process.stderr() == ""
+
+
 def test_error_codes(test):
     """Tests error codes."""
 

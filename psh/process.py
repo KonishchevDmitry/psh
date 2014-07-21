@@ -532,6 +532,7 @@ class Process:
             arg = psys.b(arg)
 
             if simple_arg_re.search(arg) is None:
+                # Or probably we should use br"$'\x{0:02x}'".format(char)
                 stream.write(b"'" + arg.replace(b"'", b"""'"'"'""") + b"'")
             else:
                 stream.write(arg)

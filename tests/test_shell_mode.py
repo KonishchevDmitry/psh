@@ -18,25 +18,23 @@ def test_execution(test):
 
     process = sh.sh("-c",
         sh.echo("aaa", _stdout=STDERR), _shell=True).execute()
-    process.stdout() == ""
-    process.stderr() == "aaa\n"
+    assert process.stdout() == ""
+    assert process.stderr() == "aaa\n"
 
     process = sh.sh(
         c=sh.sh("-c", "echo aaa >&2", _stderr=STDOUT), _shell=True).execute()
-    process.stdout() == "aaa\n"
-    process.stderr() == ""
+    assert process.stdout() == "aaa\n"
+    assert process.stderr() == ""
 
     process = sh.sh("-c",
         sh.echo("aaa", _stdout=DEVNULL), _shell=True).execute()
-    process.stdout() == ""
-    process.stderr() == ""
-
+    assert process.stdout() == ""
+    assert process.stderr() == ""
 
     pipe = sh.cat() | sh.egrep("bbb|ccc") | sh.grep("ccc")
-
     process = sh.sh("-c", pipe, _stdin="aaa\nbbb\nccc\n", _shell=True).execute()
-    process.stdout() == "bbb\n"
-    process.stderr() == ""
+    assert process.stdout() == "ccc\n"
+    assert process.stderr() == ""
 
 
 def test_error_codes(test):

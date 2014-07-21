@@ -30,7 +30,6 @@ def test_disabling_stdin_redirection(test, capfd):
     assert process.stdout() == "bbb\n"
     assert process.stderr() == ""
 
-
 def test_stdin_from_file(test, capfd):
     """Tests redirecting a file to stdin."""
 
@@ -52,7 +51,6 @@ def test_stdin_from_file(test, capfd):
     finally:
         logging.disable(logging.NOTSET)
 
-
 def test_stdout(test, capfd):
     """Tests output to stdout."""
 
@@ -70,7 +68,6 @@ def test_stdout(test, capfd):
         assert stderr == ""
     finally:
         logging.disable(logging.NOTSET)
-
 
 def test_stderr(test, capfd):
     """Tests output to stderr."""
@@ -90,7 +87,6 @@ def test_stderr(test, capfd):
     finally:
         logging.disable(logging.NOTSET)
 
-
 def test_stdout_to_stderr_redirection(test, capfd):
     """Tests redirection of stdout to stderr."""
 
@@ -108,7 +104,6 @@ def test_stdout_to_stderr_redirection(test, capfd):
         assert stderr == ""
     finally:
         logging.disable(logging.NOTSET)
-
 
 def test_stderr_to_stdout_redirection(test, capfd):
     """Tests redirection of stderr to stdout."""
@@ -128,7 +123,6 @@ def test_stderr_to_stdout_redirection(test, capfd):
     finally:
         logging.disable(logging.NOTSET)
 
-
 def test_stdout_and_stderr(test, capfd):
     """Tests output to stdout and stderr."""
 
@@ -146,7 +140,6 @@ def test_stdout_and_stderr(test, capfd):
         assert stderr == "test2\nтест4\n"
     finally:
         logging.disable(logging.NOTSET)
-
 
 def test_stdout_to_file_and_stderr_to_dev_null(test, capfd):
     """Tests redirection of stdout to a file and stderr to /dev/null."""
@@ -170,7 +163,6 @@ def test_stdout_to_file_and_stderr_to_dev_null(test, capfd):
     finally:
         logging.disable(logging.NOTSET)
 
-
 def test_stdout_to_dev_null_and_stderr_to_file(test, capfd):
     """Tests redirection of stdout to /dev/null and stderr to a file."""
 
@@ -192,7 +184,6 @@ def test_stdout_to_dev_null_and_stderr_to_file(test, capfd):
             assert temp_file.read() == psys.b("test2\nтест4\n")
     finally:
         logging.disable(logging.NOTSET)
-
 
 def test_stdout_to_file_with_append(test, capfd):
     """Tests redirection of stdout to to a file with appending."""
@@ -219,7 +210,6 @@ def test_stdout_to_file_with_append(test, capfd):
                 assert psys.u(stdout.read()) == "orig\ntest1\nтест3\n"
     finally:
         logging.disable(logging.NOTSET)
-
 
 def test_stderr_to_file_with_append(test, capfd):
     """Tests redirection of stderr to to a file with appending."""

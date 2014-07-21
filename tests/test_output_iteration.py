@@ -32,7 +32,6 @@ def test_output_iteration(test):
     for line in stdout:
         assert type(line) == str
 
-
 def test_output_iteration_with_large_data(test):
     """
     Tests iteration over process' output with large amount of data
@@ -46,7 +45,6 @@ def test_output_iteration_with_large_data(test):
 
     assert stdout == stdin
 
-
 def test_output_iteration_with_raw_false(test):
     """Tests iteration over process' output with _iter_raw = False."""
 
@@ -57,7 +55,6 @@ def test_output_iteration_with_raw_false(test):
 
     for line in stdout:
         assert type(line) == str
-
 
 def test_output_iteration_with_raw_true(test):
     """Tests iteration over process' output with _iter_raw = True."""
@@ -70,7 +67,6 @@ def test_output_iteration_with_raw_true(test):
     for line in stdout:
         assert type(line) == bytes
 
-
 def test_output_iteration_option_delimiter(test):
     """Tests iteration over process' output with custom delimiter."""
 
@@ -78,7 +74,6 @@ def test_output_iteration_option_delimiter(test):
         stdout = [line for line in process]
 
     assert stdout == ["aa\t", "a\nте\t", "ст\nbbb"]
-
 
 def test_output_iteration_without_delimiter_raw(test):
     """Tests iteration over process' output without delimiter (raw)."""
@@ -89,7 +84,6 @@ def test_output_iteration_without_delimiter_raw(test):
     with sh.cat(_stdin=stdin, _iter_delimiter="", _iter_raw=True) as process:
         assert stdin == b"".join(block for block in process)
 
-
 def test_output_iteration_without_delimiter_unicode(test):
     """Tests iteration over process' output without delimiter (unicode)."""
 
@@ -98,7 +92,6 @@ def test_output_iteration_without_delimiter_unicode(test):
             for block in process:
                 pass
 
-
 def test_output_iteration_error(test):
     """Tests iteration over process which returns an error."""
 
@@ -106,7 +99,6 @@ def test_output_iteration_error(test):
         with pytest.raises(psh.ExecutionError):
             for line in process:
                 pass
-
 
 def test_output_iterator_misusing(test):
     """Tests iteration outside 'with' statement."""

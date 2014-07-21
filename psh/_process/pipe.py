@@ -40,12 +40,10 @@ class Pipe():
                 pipe.read = None
                 self.write = None
 
-
     def __del__(self):
         # Don't close the object in unit tests to be able to detect leaks
         if not hasattr(psh, "_UNIT_TEST"):
             self.close()
-
 
     def close(self, read=True, write=True):
         """Closes the pipe."""

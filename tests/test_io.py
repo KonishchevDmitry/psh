@@ -24,7 +24,6 @@ def test_string_input(test):
     assert sh.grep("тест", _stdin="aaa\nтест\nbbb\n").execute().stdout() == "тест\n"
     assert sh.grep("тест", _stdin=psys.b("aaa\nтест\nbbb\n")).execute().stdout() == "тест\n"
 
-
 def test_iterator_input(test):
     """Tests process input from string."""
 
@@ -35,7 +34,6 @@ def test_iterator_input(test):
             yield "\n" + str(i) if i else str(i)
 
     assert sh.cat(_stdin=func()).execute().stdout() == stdout
-
 
 def test_file_object_input(test):
     """Tests process input from file object."""
@@ -50,7 +48,6 @@ def test_file_object_input(test):
         with open(temp_file.name, "rb") as stdin:
             assert sh.cat(_stdin=stdin).execute().raw_stdout() == stdout
 
-
 def test_invalid_input(test):
     """Tests invalid input."""
 
@@ -59,7 +56,6 @@ def test_invalid_input(test):
 
     with pytest.raises(psh.InvalidArgument):
         sh.grep("1", _stdin=iter([1])).execute()
-
 
 
 def test_output(test):
@@ -76,7 +72,6 @@ def test_output(test):
     error = pytest.raises(psh.ExecutionError,
         lambda: sh.sh("-c", command + " exit 1").execute()).value
     _check_output(error, valid_stdout, valid_stderr)
-
 
 def test_large_output(test):
     """Tests large amount of output (more than any pipe buffer size)."""
@@ -108,7 +103,6 @@ def test_large_output(test):
 
         if stderr_tempfile is not None:
             stderr_tempfile.close()
-
 
 def test_output_after_process_termination(test):
     """Tests execution of a process that terminates before its children."""

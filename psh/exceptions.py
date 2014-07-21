@@ -37,12 +37,10 @@ class ExecutionError(Error):
 
         super(ExecutionError, self).__init__(error)
 
-
     def command(self):
         """Returns the command string."""
 
         return self.__command
-
 
     def raw_stderr(self):
         """
@@ -51,7 +49,6 @@ class ExecutionError(Error):
 
         return self.__stderr
 
-
     def raw_stdout(self):
         """
         Returns the process' captured raw stdout (if ``_stdout = PIPE``).
@@ -59,18 +56,15 @@ class ExecutionError(Error):
 
         return self.__stdout
 
-
     def status(self):
         """Returns the process's exit status."""
 
         return self.__status
 
-
     def stderr(self):
         """Returns the process' captured stderr (if ``_stderr = PIPE``)."""
 
         return psys.u(self.__stderr)
-
 
     def stdout(self):
         """Returns the process' captured stdout (if ``_stdout = PIPE``)."""

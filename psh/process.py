@@ -282,10 +282,8 @@ class Process:
         if not self.__defer:
             self.execute()
 
-
     def __enter__(self):
         return self
-
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
@@ -307,7 +305,6 @@ class Process:
 
         return False
 
-
     def __iter__(self):
         """Executes the process and returns an iterator to its output."""
 
@@ -324,7 +321,6 @@ class Process:
             raise
 
         return iterator
-
 
     def __or__(self, process):
         """Shell-style pipelines."""
@@ -352,12 +348,10 @@ class Process:
 
         return process
 
-
     def command(self):
         """Returns command arguments as it will be executed."""
 
         return self.__command[:]
-
 
     def execute(self, wait=True, check_status=True):
         """Executes the command.
@@ -373,7 +367,6 @@ class Process:
             self.wait(check_status=check_status)
 
         return self
-
 
     def kill(self, signal=signal.SIGTERM):
         """Kills the process.
@@ -401,7 +394,6 @@ class Process:
 
         return False
 
-
     def pid(self):
         """Returns the process' PID."""
 
@@ -409,7 +401,6 @@ class Process:
             raise InvalidProcessState("Process is not running")
 
         return self.__pid
-
 
     def raw_stderr(self):
         """
@@ -419,7 +410,6 @@ class Process:
         self.__ensure_terminated()
         return self.__stderr.getvalue()
 
-
     def raw_stdout(self):
         """
         Returns the process' captured raw stdout (if ``_stdout = PIPE``).
@@ -428,25 +418,21 @@ class Process:
         self.__ensure_terminated()
         return self.__stdout.getvalue()
 
-
     def status(self):
         """Returns the process' exit status."""
 
         self.__ensure_terminated()
         return self.__status
 
-
     def stderr(self):
         """Returns the process' captured stderr (if ``_stderr = PIPE``)."""
 
         return psys.u(self.raw_stderr())
 
-
     def stdout(self):
         """Returns the process' captured stdout (if ``_stdout = PIPE``)."""
 
         return psys.u(self.raw_stdout())
-
 
     def wait(self, check_status=False, kill=None):
         """Waits for the process termination.
@@ -490,7 +476,6 @@ class Process:
 
         return self.__status
 
-
     def _execute(self, stdout=None, check_pipes=True):
         """Executes the command."""
 
@@ -522,7 +507,6 @@ class Process:
 
             raise
 
-
     def _pipe_process(self, process):
         """Creates a pipe between two processes."""
 
@@ -535,7 +519,6 @@ class Process:
 
             LOG.debug("Creating a pipe: %s | %s", process, self)
             self.__stdin_source = process
-
 
     def _shell_command(self, stream, pipe_ok_statuses):
         """
@@ -615,7 +598,6 @@ class Process:
 
             pipe_ok_statuses.append(self.__ok_statuses[:])
 
-
     def _shell_command_full(self):
         """
         Generates a shell command which execution is equal to self.execute()
@@ -643,12 +625,10 @@ class Process:
 
         return b"bash -c '" + command.getvalue().replace(b"'", b"""'"'"'""") + b"'"
 
-
     def _state(self):
         """Returns current process state."""
 
         return self.__state
-
 
     def __child(self):
         """Handles child process execution."""
@@ -737,7 +717,6 @@ class Process:
         finally:
             os._exit(exit_code)
 
-
     def __close(self):
         """
         Frees all allocated resources unneeded after the process termination
@@ -755,7 +734,6 @@ class Process:
                 LOG.error("Unable to close a pipe: %s.", psys.e(e))
             else:
                 self.__termination_fd = None
-
 
     def __communicate(self, poll):
         """Communicates with the process and waits for its termination."""
@@ -891,7 +869,6 @@ class Process:
                             else:
                                 break
 
-
     def __communication_thread_func(self, fork_lock, poll):
         """A thread in which we communicate with the process."""
 
@@ -915,7 +892,6 @@ class Process:
                 self.__error = e
         finally:
             poll.close()
-
 
     def __configure_stdio(self, stdout):
         """Configures the standard I/O file descriptors."""
@@ -968,13 +944,11 @@ class Process:
             raise LogicalError()
         # stdout <--
 
-
     def __ensure_terminated(self):
         """Ensures that the process is terminated."""
 
         if self.__state != _PROCESS_STATE_TERMINATED:
             raise InvalidProcessState("The process is not terminated")
-
 
     def __execute(self, stdout):
         """Executes the command."""
@@ -1032,7 +1006,6 @@ class Process:
                 self.__child()
         # Fork the process <--
 
-
     def __join_threads(self, timeout=None):
         """Joins all spawned threads."""
 
@@ -1049,12 +1022,10 @@ class Process:
 
         return True
 
-
     def __on_output(self, fd, data):
         """Called when we got stdout/stderr data from the process."""
 
         (self.__stdout if fd == psys.STDOUT_FILENO else self.__stderr).write(data)
-
 
     def __parse_args(self, args, options):
         """Parses command arguments and options."""
@@ -1081,7 +1052,7 @@ class Process:
                             psys.b(check_arg(option, k, types=(bytes, str))),
                             psys.b(check_arg(option, v, types=(bytes, str)))
                         )
-                            for k, v in value.items())
+                        for k, v in value.items())
             elif option == "_iter_delimiter":
                 self.__iter_delimiter = psys.b(
                     check_arg(option, value, types=(bytes, str)))
@@ -1134,18 +1105,15 @@ class Process:
         self.__command += [_get_arg_value(arg, self.__shell) for arg in args]
         # Command arguments <--
 
-
     def __piped_from_process(self):
         """Returns True if this process is piped from another process."""
 
         return isinstance(self.__stdin_source, Process)
 
-
     def __piped_to_process(self):
         """Returns True if this process is piped to another process."""
 
         return isinstance(self.__stdout_target, Process)
-
 
     def __to_bytes(self):
         """Returns the command string.
@@ -1155,7 +1123,6 @@ class Process:
         """
 
         return psys.b(self.__to_str())
-
 
     def __to_str(self):
         """Returns the command string.
@@ -1198,7 +1165,6 @@ class Process:
 
         return command
 
-
     def __wait_pid_thread(self, fork_lock, termination_fd):
         """Waits for the process termination."""
 
@@ -1235,14 +1201,12 @@ class Process:
             except Exception as e:
                 LOG.error("Unable to close a pipe: %s.", psys.e(e))
 
-
     if PY3:
         __bytes__ = __to_bytes
         __str__ = __to_str
     else:
         __str__ = __to_bytes
         __unicode__ = __to_str
-
 
 
 def _get_arg_value(value, shell):

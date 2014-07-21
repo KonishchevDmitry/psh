@@ -74,7 +74,6 @@ def test_command_arguments(test):
     assert str(process) == "test arg"
     assert bytes(process) == psys.b(str(process))
 
-
 def test_invalid_command_arguments(test):
     """Tests invalid command arguments."""
 
@@ -88,14 +87,12 @@ def test_invalid_command_arguments(test):
         sh.test(_invalid=None)
 
 
-
 def test_repeated_execution(test):
     """Tests repeated execution."""
 
     process = sh.true().execute()
     with pytest.raises(psh.InvalidOperation):
         process.execute()
-
 
 
 def test_pid(test):
@@ -109,7 +106,6 @@ def test_pid(test):
     assert process.execute().stdout().strip() == str(process.pid())
 
 
-
 def test_kill(test):
     """Tests kill()."""
 
@@ -118,7 +114,6 @@ def test_kill(test):
     process.kill()
     assert process.wait() == 143
     assert time.time() < start_time + 1
-
 
 
 def test_wait(test):
@@ -130,7 +125,6 @@ def test_wait(test):
     assert process.wait() == 0
     assert time.time() >= start_time + 3
 
-
 def test_wait_status(test):
     """Tests wait() return value."""
 
@@ -141,7 +135,6 @@ def test_wait_status(test):
     assert pytest.raises(psh.ExecutionError,
         lambda: sh.false().execute(wait=False).wait(check_status=True)).value.status() == 1
 
-
 def test_wait_with_kill(test):
     """Tests wait(kill = ...)."""
 
@@ -150,7 +143,6 @@ def test_wait_with_kill(test):
     assert process.wait(kill=signal.SIGTERM) == 143
     assert time.time() < start_time + 1
 
-
 def test_invalid_wait(test):
     """Tests wait() on a pending process."""
 
@@ -158,12 +150,10 @@ def test_invalid_wait(test):
         sh.true().wait()
 
 
-
 def test_zero_exit_status(test):
     """Tests zero exit status."""
 
     assert sh.true().execute().status() == 0
-
 
 def test_nonzero_exit_status(test):
     """Tests nonzero exit status."""
@@ -171,13 +161,11 @@ def test_nonzero_exit_status(test):
     assert pytest.raises(psh.ExecutionError,
         lambda: sh.false().execute()).value.status() == 1
 
-
 def test_nonexisting_command(test):
     """Tests executing nonexistent."""
 
     assert pytest.raises(psh.ExecutionError,
         lambda: sh("nonexistent command")().execute()).value.status() == 127
-
 
 def test_ok_statuses(test):
     """Tests _ok_statuses option."""
@@ -185,7 +173,6 @@ def test_ok_statuses(test):
     assert sh.false(_ok_statuses=(0, 1)).execute().status() == 1
     assert pytest.raises(psh.ExecutionError,
         lambda: sh.true(_ok_statuses=[]).execute()).value.status() == 0
-
 
 
 def test_defer(test):
@@ -197,14 +184,12 @@ def test_defer(test):
     assert sh.true(_defer=False).status() == 0
 
 
-
 def test_environment(test):
     """Tests overriding process environment variables."""
 
     assert sh.env().execute().stdout() != ""
     assert sh.env(_env={}).execute().stdout() == ""
-    assert sh.env(_env={ "psh_environ_test": "тест" }).execute().stdout() == "psh_environ_test=тест\n"
-
+    assert sh.env(_env={"psh_environ_test": "тест"}).execute().stdout() == "psh_environ_test=тест\n"
 
 
 def test_program_customization(test):
@@ -216,7 +201,6 @@ def test_program_customization(test):
     true = psh.Program("true", _defer=False)
     assert true().status() == 0
 
-
 def test_sh_customization(test):
     """Tests customization of a Sh instance."""
 
@@ -227,11 +211,10 @@ def test_sh_customization(test):
     assert csh.true().status() == 0
 
 
-
 def test_on_execute(test):
     """Tests _on_execute option."""
 
-    state = { "executed": False }
+    state = {"executed": False}
 
     def func(process):
         state["executed"] = True
@@ -243,12 +226,11 @@ def test_on_execute(test):
     assert state["executed"] is True
 
 
-
-def test_on_execute_with_exeption(test):
+def test_on_execute_with_exception(test):
     """Tests _on_execute option with function that throws an exception."""
 
     allow = False
-    state = { "executed": False }
+    state = {"executed": False}
 
     class NotAllowed(Exception):
         pass

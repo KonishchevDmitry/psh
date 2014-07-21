@@ -59,6 +59,6 @@ if __name__ == "__main__":
         install_requires=["pcore", "psys >= 0.3"],
         packages=find_packages(),
 
-        cmdclass={ "test": PyTest },
+        cmdclass={"test": PyTest},
         tests_require=["pcore", "psys >= 0.3", "pytest"],
     )

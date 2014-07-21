@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 
 from psh.process import Process
 from psh.process import STDIN, STDOUT, STDERR, PIPE, File, DEVNULL
-from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState, ProcessOutputWasTruncated
+from psh.exceptions import Error, ExecutionError, InvalidArgument, InvalidOperation, InvalidProcessState, \
+    ProcessOutputWasTruncated
 
 
 class Sh(object):
@@ -16,13 +17,11 @@ class Sh(object):
         # Default process options
         self._default_options = default_options
 
-
     def __call__(self, program):
         """Creates a :py:class:`Program` instance."""
 
         return Program(program,
             **object.__getattribute__(self, "_default_options"))
-
 
     def __getattribute__(self, program):
         """Creates a :py:class:`Program` instance."""
@@ -40,7 +39,6 @@ class Program:
 
         # Default process options
         self.__options = default_options
-
 
     def __call__(self, *args, **options):
         """Creates a :py:class:`Process` instance for this program."""

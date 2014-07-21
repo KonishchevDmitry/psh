@@ -19,12 +19,10 @@ def test_pipes(test):
     process = sh.cat(_stdin="aaaa\nbbbb\n" * 1024 * 100) | sh.grep("aaaa") | sh.wc("-l")
     assert process.execute().stdout().strip() == "102400"
 
-
 def test_abandoned_pipe(test):
     """Tests that an abandoned pipe doesn't lead to resource leaks."""
 
     sh.cat("/etc/fstab") | sh.grep("/dev") | sh.wc("-l")
-
 
 def test_pipe_errors(test):
     """Tests errors in the middle of the pipe."""
@@ -35,7 +33,6 @@ def test_pipe_errors(test):
 
     process = sh.echo("aaa") | sh.grep("bbb", _ok_statuses=(0, 1)) | sh.wc("-l")
     process.execute().stdout().strip() == "0"
-
 
 def test_piping_errors(test):
     """Tests invalid process piping."""

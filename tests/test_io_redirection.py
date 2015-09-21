@@ -15,6 +15,29 @@ import test
 test.init(globals())
 
 
+def test_command_with_redirection(test):
+    """Tests command arguments representation."""
+
+    process = sh.echo("test", _stdout=STDERR)
+    assert str(process) == "echo test >&2"
+    assert bytes(process) == psys.b(str(process))
+
+    process = sh.echo("test", _stdout=File("/tmp/test.path"))
+    assert str(process) == "echo test > /tmp/test.path"
+    assert bytes(process) == psys.b(str(process))
+
+    process = sh.echo("test", _stderr=File("/tmp/test.path"))
+    assert str(process) == "echo test 2> /tmp/test.path"
+    assert bytes(process) == psys.b(str(process))
+
+    process = sh.echo("test", _stderr=STDOUT)
+    assert str(process) == "echo test 2>&1"
+    assert bytes(process) == psys.b(str(process))
+
+    process = sh.echo("test", _stdout=DEVNULL, _stderr=DEVNULL)
+    assert str(process) == "echo test > /dev/null 2> /dev/null"
+    assert bytes(process) == psys.b(str(process))
+
 def test_disabling_stdin_redirection(test, capfd):
     """Tests disabling stdin redirection."""
 

@@ -1164,6 +1164,16 @@ class Process:
 
                 command += arg
 
+        if self.__stdout_target is STDERR:
+            command += " >&2"
+        elif isinstance(self.__stdout_target, File):
+            command += " > {0}".format(self.__stdout_target.path)
+
+        if self.__stderr_target is STDOUT:
+            command += " 2>&1"
+        elif isinstance(self.__stderr_target, File):
+            command += " 2> {0}".format(self.__stderr_target.path)
+
         return command
 
     def __wait_pid_thread(self, fork_lock, termination_fd):

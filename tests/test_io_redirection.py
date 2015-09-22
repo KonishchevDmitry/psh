@@ -38,6 +38,10 @@ def test_command_with_redirection(test):
     assert str(process) == "echo test > /dev/null 2> /dev/null"
     assert bytes(process) == psys.b(str(process))
 
+    process = sh.echo("test", _stdout=File("/\rtmp\t/test.\rpath"))
+    assert str(process) == "echo test > '/\\rtmp\\t/test.\\rpath'"
+    assert bytes(process) == psys.b(str(process))
+
 def test_disabling_stdin_redirection(test, capfd):
     """Tests disabling stdin redirection."""
 

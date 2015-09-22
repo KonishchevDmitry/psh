@@ -1138,41 +1138,17 @@ class Process:
             if command:
                 command += " "
 
-            if type(arg) == bytes:
-                for c in b""" '"\\\r\n\t""":
-                    if c in arg:
-                        arg = repr(arg)[1:] if PY3 else repr(arg)
-                        break
-                else:
-                    arg = repr(arg)[1 + int(PY3):-1]
-
-                command += psys.u(arg)
-            else:
-                for c in """ '"\\\r\n\t""":
-                    if c in arg:
-                        for replacement in (
-                            ("\\", r"\\"),
-                            ("'",  r"\'"),
-                            ("\r", r"\r"),
-                            ("\n", r"\n"),
-                            ("\t", r"\t"),
-                        ):
-                            arg = arg.replace(*replacement)
-
-                        arg = "'" + arg + "'"
-                        break
-
-                command += arg
+            command += _arg_to_str(arg)
 
         if self.__stdout_target is STDERR:
             command += " >&2"
         elif isinstance(self.__stdout_target, File):
-            command += " > {0}".format(self.__stdout_target.path)
+            command += " > " + _arg_to_str(self.__stdout_target.path)
 
         if self.__stderr_target is STDOUT:
             command += " 2>&1"
         elif isinstance(self.__stderr_target, File):
-            command += " 2> {0}".format(self.__stderr_target.path)
+            command += " 2> " + _arg_to_str(self.__stderr_target.path)
 
         return command
 
@@ -1231,3 +1207,39 @@ def _get_arg_value(value, shell):
         return value._shell_command_full()
     else:
         raise InvalidArgument("Invalid argument: command arguments must be basic types only")
+
+
+def _arg_to_str(arg):
+    """
+    Returns a string representation (possibly quoted)
+    of a command argument as it would be used in shell scripts.
+
+    .. note::
+        Very lazy formatting. Not suitable for automatic generation of shell scripts.
+    """
+
+    if type(arg) == bytes:
+        for c in b""" '"\\\r\n\t""":
+            if c in arg:
+                arg = repr(arg)[1:] if PY3 else repr(arg)
+                break
+        else:
+            arg = repr(arg)[1 + int(PY3):-1]
+
+        return psys.u(arg)
+    else:
+        for c in """ '"\\\r\n\t""":
+            if c in arg:
+                for replacement in (
+                    ("\\", r"\\"),
+                    ("'",  r"\'"),
+                    ("\r", r"\r"),
+                    ("\n", r"\n"),
+                    ("\t", r"\t"),
+                ):
+                    arg = arg.replace(*replacement)
+
+                arg = "'" + arg + "'"
+                break
+
+        return arg

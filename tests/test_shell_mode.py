@@ -9,6 +9,12 @@ import pytest
 import psh
 from psh import sh, STDOUT, STDERR, DEVNULL
 
+from pcore import PY3
+if PY3:
+    chr = chr
+else:
+    chr = unichr
+
 import test
 test.init(globals())
 

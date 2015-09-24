@@ -7,7 +7,7 @@
 %global with_check 1
 
 Name:    python-psh
-Version: 0.2.4
+Version: 0.2.5
 Release: 1%{?dist}
 Summary: Process management library
 
@@ -92,6 +92,9 @@ rm doc/_build/html/.buildinfo
 
 
 %changelog
+* Thu Sep 24 2015 Dmitry Konishchev <konishchev@gmail.com> - 0.2.5-1
+- New version.
+
 * Mon Nov 18 2013 Dmitry Konishchev <konishchev@gmail.com> - 0.2.4-1
 - New version.
 

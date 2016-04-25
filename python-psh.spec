@@ -30,6 +30,7 @@ URL:     http://konishchevdmitry.github.com/psh/
 Source:  http://pypi.python.org/packages/source/p/psh/psh-%version.tar.gz
 
 BuildArch:     noarch
+BuildRequires: make
 BuildRequires: python2-devel python-setuptools
 %if 0%{with python3}
 BuildRequires: python3-devel python3-setuptools
@@ -44,7 +45,7 @@ BuildRequires: python3-pcore, python3-psys >= 0.3, python3-pytest >= 2.2.4
 %endif  # with check
 
 %if 0%{with docs}
-BuildRequires: make, python-pcore, python-psys >= 0.3, python-sphinx
+BuildRequires: python-pcore, python-psys >= 0.3, python-sphinx
 %endif  # with docs
 
 Requires: python-pcore, python-psys >= 0.3
@@ -94,9 +95,9 @@ Documentation for psh
 
 
 %build
-%{__python2} setup.py build
-%if 0%{with python3}
-%{__python3} setup.py build
+make PYTHON=%{__python2}
+%if %{with python3}
+make PYTHON=%{__python3}
 %endif  # with python3
 
 
@@ -118,9 +119,9 @@ rm doc/_build/html/.buildinfo
 %install
 [ "%buildroot" = "/" ] || rm -rf "%buildroot"
 
-%{__python2} setup.py install -O1 --skip-build --root "%buildroot"
-%if 0%{with python3}
-%{__python3} setup.py install -O1 --skip-build --root "%buildroot"
+make PYTHON=%{__python2} INSTALL_FLAGS="-O1 --root '%buildroot'" install
+%if %{with python3}
+make PYTHON=%{__python3} INSTALL_FLAGS="-O1 --root '%buildroot'" install
 %endif  # with python3
 
 

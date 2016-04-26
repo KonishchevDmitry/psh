@@ -1,10 +1,23 @@
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%if 0%{?fedora} > 12 || 0%{?rhel} > 7
+%bcond_without python3
+%else
+%bcond_with python3
+%endif
+
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{!?__python2: %global __python2 /usr/bin/python2}
+%{!?python2_sitelib: %global python2_sitelib %(%{__python2} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%endif
+%if %{with python3}
+%{!?__python3: %global __python3 /usr/bin/python3}
+%{!?python3_sitelib: %global python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%endif  # with python3
 
 # Enable building of doc package
-%global with_docs 1
+%bcond_without docs
 
 # Run tests
-%global with_check 1
+%bcond_without check
 
 Name:    python-psh
 Version: 0.2.5
@@ -17,13 +30,23 @@ URL:     http://konishchevdmitry.github.com/psh/
 Source:  http://pypi.python.org/packages/source/p/psh/psh-%version.tar.gz
 
 BuildArch:     noarch
-BuildRequires: python-setuptools
-%if 0%{?with_check}
+BuildRequires: make
+BuildRequires: python2-devel python-setuptools
+%if 0%{with python3}
+BuildRequires: python3-devel python3-setuptools
+%endif  # with python3
+
+%if 0%{with check}
+BuildRequires: procps
 BuildRequires: python-pcore, python-psys >= 0.3, pytest >= 2.2.4
-%endif
-%if 0%{?with_docs}
-BuildRequires: make, python-pcore, python-psys >= 0.3, python-sphinx
-%endif
+%if 0%{with python3}
+BuildRequires: python3-pcore, python3-psys >= 0.3, python3-pytest >= 2.2.4
+%endif  # with python3
+%endif  # with check
+
+%if 0%{with docs}
+BuildRequires: python-pcore, python-psys >= 0.3, python-sphinx
+%endif  # with docs
 
 Requires: python-pcore, python-psys >= 0.3
 
@@ -38,7 +61,25 @@ subprocess module is very limited. psh combines the power of Python language
 and an elegant shell-style way to execute processes.
 
 
-%if 0%{?with_docs}
+%if 0%{with python3}
+%package -n python3-psh
+Summary: Process management library
+
+Requires: python3-pcore, python3-psys >= 0.3
+
+%description -n python3-psh
+psh allows you to spawn processes in Unix shell-style way.
+
+Unix shell is very convenient for spawning processes, connecting them into
+pipes, etc., but it has a very limited language which is often not suitable
+for writing complex programs. Python is a very flexible and reach language
+which is used in a wide variety of application domains, but its standard
+subprocess module is very limited. psh combines the power of Python language
+and an elegant shell-style way to execute processes.
+%endif  # with python3
+
+
+%if 0%{with docs}
 %package doc
 Summary: Documentation for psh
 Group: Development/Languages
@@ -46,7 +87,7 @@ Requires: %name = %version-%release
 
 %description doc
 Documentation for psh
-%endif
+%endif  # with docs
 
 
 %prep
@@ -54,37 +95,55 @@ Documentation for psh
 
 
 %build
-%__python setup.py build
+make PYTHON=%{__python2}
+%if %{with python3}
+make PYTHON=%{__python3}
+%endif  # with python3
+
 
 %if 0%{?with_docs}
 make doc
 rm doc/_build/html/.buildinfo
-%endif
+%endif  # with docs
 
 
-%if 0%{?with_check}
 %check
-%__python setup.py test
-%endif
+%if 0%{with check}
+%{__python2} setup.py test
+%if 0%{with python3}
+%{__python3} setup.py test
+%endif  # with python3
+%endif  # with check
 
 
 %install
 [ "%buildroot" = "/" ] || rm -rf "%buildroot"
 
-%__python setup.py install -O1 --skip-build --root "%buildroot"
+make PYTHON=%{__python2} INSTALL_FLAGS="-O1 --root '%buildroot'" install
+%if %{with python3}
+make PYTHON=%{__python3} INSTALL_FLAGS="-O1 --root '%buildroot'" install
+%endif  # with python3
 
 
 %files
 %defattr(-,root,root,-)
+%{python2_sitelib}/psh
+%{python2_sitelib}/psh-*.egg-info
+%doc ChangeLog INSTALL README.rst
 
-%python_sitelib/psh
-%python_sitelib/psh-*.egg-info
+%if 0%{with python3}
+%files -n python3-psh
+%defattr(-,root,root,-)
+%{python3_sitelib}/psh
+%{python3_sitelib}/psh-*.egg-info
+%doc ChangeLog INSTALL README.rst
+%endif  # with python3
 
-%if 0%{?with_docs}
+%if 0%{with docs}
 %files doc
 %defattr(-,root,root,-)
 %doc doc/_build/html
-%endif
+%endif  # with docs
 
 
 %clean

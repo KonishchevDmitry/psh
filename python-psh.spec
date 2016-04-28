@@ -14,7 +14,11 @@
 %endif  # with python3
 
 # Enable building of doc package
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%bcond_with docs
+%else
 %bcond_without docs
+%endif
 
 # Run tests
 %bcond_without check
@@ -101,7 +105,7 @@ make PYTHON=%{__python3}
 %endif  # with python3
 
 
-%if 0%{?with_docs}
+%if 0%{with docs}
 make doc
 rm doc/_build/html/.buildinfo
 %endif  # with docs

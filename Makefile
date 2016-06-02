@@ -1,8 +1,9 @@
-.PHONY: build check install doc dist srpm rpm pypi clean
+.PHONY: build check install doc dist sources srpm rpm pypi clean
 
 PYTHON   ?= python
 NAME     := psh
 RPM_NAME := python-$(NAME)
+VERSION  := 0.2.5
 
 TEST_ENV_PATH         := test-env
 CHECK_PYTHON_VERSIONS := 2 3
@@ -31,6 +32,10 @@ doc:
 dist: clean
 	$(PYTHON) setup.py sdist
 	cp dist/$(NAME)-*.tar.gz .
+
+sources:
+	@git archive --format=tar --prefix="$(NAME)-$(VERSION)/" \
+		$(shell git rev-parse --verify HEAD) | gzip > $(NAME)-$(VERSION).tar.gz
 
 srpm: dist
 	rpmbuild -bs --define "_sourcedir $(CURDIR)" $(RPM_NAME).spec

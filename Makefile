@@ -44,4 +44,5 @@ pypi: clean
 
 clean:
 	@make -C doc clean
+	find . -type d -name __pycache__ -d -exec rm -rf {} \;
 	rm -rf build dist $(PROJECT).egg-info *.egg $(TEST_ENV_PATH)

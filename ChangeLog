@@ -1,22 +1,22 @@
+Version 0.2.6
+-------------
+ * Drop __pycache__ from package
+
 Version 0.2.5
 -------------
  * Show custom I/O redirects in command string #1
-
 
 Version 0.2.4
 -------------
  * psys >= 0.3 support
 
-
 Version 0.2.3
 -------------
  * psys module has been separated to an independent package
 
-
 Version 0.2.2
 -------------
  * Fixed a bug that led to AttributeError on the module import in Python 2.6
-
 
 Version 0.2.1
 -------------
@@ -25,11 +25,9 @@ Version 0.2.1
  * Fixed broken python-psh.spec
  * Minor code and documentation changes
 
-
 Version 0.2
 -----------
  * Python 3 support
-
 
 Version 0.1
 -----------

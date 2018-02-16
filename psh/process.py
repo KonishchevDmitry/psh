@@ -685,7 +685,7 @@ class Process:
                     try:
                         eintr_retry(os.dup2)(psys.STDERR_FILENO, psys.STDOUT_FILENO)
                     except Exception as e:
-                        raise Error("Unable to redirect stderr to stdout: {0}", psys.e(e))
+                        raise Error("Unable to redirect stdout to stderr: {0}", psys.e(e))
                 elif isinstance(self.__stdout_target, File):
                     redirect_fd(self.__stdout_target.path, psys.STDOUT_FILENO,
                         append=self.__stdout_target.append)

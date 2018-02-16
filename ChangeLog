@@ -1,3 +1,7 @@
+Version 0.2.7
+-------------
+ * Fix a typo in error message
+
 Version 0.2.6
 -------------
  * Drop __pycache__ from package

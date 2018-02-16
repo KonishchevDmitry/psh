@@ -1,10 +1,12 @@
-.PHONY: build check install doc dist rpm_sources srpm rpm pypi clean
+.PHONY: build check install doc dist sources srpm rpm pypi clean
 
-PROJECT := psh
-PYTHON := python
-TEST_ENV_PATH := test-env
+PYTHON   ?= python
+NAME     := psh
+RPM_NAME := python-$(NAME)
+VERSION  := 0.2.5
+
+TEST_ENV_PATH         := test-env
 CHECK_PYTHON_VERSIONS := 2 3
-RPM_SOURCES_PATH := ~/rpmbuild/SOURCES
 
 build:
 	$(PYTHON) setup.py build
@@ -12,7 +14,7 @@ build:
 check:
 	@mkdir -p "$(TEST_ENV_PATH)"
 	@set -e; for version in $(CHECK_PYTHON_VERSIONS); do \
-		echo; echo "Testing $(PROJECT) with python$$version..."; echo; \
+		echo; echo "Testing $(NAME) with python$$version..."; echo; \
 		env_path="$(TEST_ENV_PATH)/python$$version"; \
 		if [ ! -e "$$env_path" ]; then \
 			virtualenv --python python$$version --distribute "$$env_path" && \
@@ -22,27 +24,29 @@ check:
 	done
 
 install:
-	$(PYTHON) setup.py install --skip-build
+	$(PYTHON) setup.py install --skip-build $(INSTALL_FLAGS)
 
 doc:
-	make -C doc html
+	$(MAKE) -C doc html
 
 dist: clean
 	$(PYTHON) setup.py sdist
+	cp dist/$(NAME)-*.tar.gz .
 
-rpm_sources: dist
-	cp dist/* $(RPM_SOURCES_PATH)/
+sources:
+	@git archive --format=tar --prefix="$(NAME)-$(VERSION)/" \
+		$(shell git rev-parse --verify HEAD) | gzip > $(NAME)-$(VERSION).tar.gz
 
-srpm: rpm_sources
-	rpmbuild -bs python-$(PROJECT).spec
+srpm: dist
+	rpmbuild -bs --define "_sourcedir $(CURDIR)" $(RPM_NAME).spec
 
-rpm: rpm_sources
-	rpmbuild -ba python-$(PROJECT).spec
+rpm: dist
+	rpmbuild -ba --define "_sourcedir $(CURDIR)" $(RPM_NAME).spec
 
 pypi: clean
 	$(PYTHON) setup.py sdist upload
 
 clean:
-	@make -C doc clean
+	@$(MAKE) -C doc clean
 	find . -type d -name __pycache__ -d -exec rm -rf {} \;
-	rm -rf build dist $(PROJECT).egg-info *.egg $(TEST_ENV_PATH)
+	rm -rf build dist $(NAME)-*.tar.gz $(NAME).egg-info *.egg $(TEST_ENV_PATH)

@@ -26,8 +26,16 @@ def test_command_with_redirection(test):
     assert str(process) == "echo test > /tmp/test.path"
     assert bytes(process) == psys.b(str(process))
 
+    process = sh.echo("test", _stdout=File("/tmp/test.path", append=True))
+    assert str(process) == "echo test >> /tmp/test.path"
+    assert bytes(process) == psys.b(str(process))
+
     process = sh.echo("test", _stderr=File("/tmp/test.path"))
     assert str(process) == "echo test 2> /tmp/test.path"
+    assert bytes(process) == psys.b(str(process))
+
+    process = sh.echo("test", _stderr=File("/tmp/test.path", append=True))
+    assert str(process) == "echo test 2>> /tmp/test.path"
     assert bytes(process) == psys.b(str(process))
 
     process = sh.echo("test", _stderr=STDOUT)

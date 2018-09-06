@@ -581,7 +581,10 @@ class Process:
             elif self.__stdout_target is STDERR:
                 stream.write(b" >&2")
             elif isinstance(self.__stdout_target, File):
-                stream.write(b" > ")
+                if self.__stdout_target.append:
+                    stream.write(b" >> ")
+                else:
+                    stream.write(b" > ")
                 write_arg(stream, self.__stdout_target.path)
             else:
                 raise LogicalError()
@@ -592,7 +595,10 @@ class Process:
             elif self.__stderr_target is STDOUT:
                 stream.write(b" 2>&1")
             elif isinstance(self.__stderr_target, File):
-                stream.write(b" 2> ")
+                if self.__stderr_target.append:
+                    stream.write(b" 2>> ")
+                else:
+                    stream.write(b" 2> ")
                 write_arg(stream, self.__stderr_target.path)
             else:
                 raise LogicalError()
@@ -1143,12 +1149,20 @@ class Process:
         if self.__stdout_target is STDERR:
             command += " >&2"
         elif isinstance(self.__stdout_target, File):
-            command += " > " + _arg_to_str(self.__stdout_target.path)
+            if self.__stdout_target.append:
+                command += " >> "
+            else:
+                command += " > "
+            command += _arg_to_str(self.__stdout_target.path)
 
         if self.__stderr_target is STDOUT:
             command += " 2>&1"
         elif isinstance(self.__stderr_target, File):
-            command += " 2> " + _arg_to_str(self.__stderr_target.path)
+            if self.__stderr_target.append:
+                command += " 2>> "
+            else:
+                command += " 2> "
+            command += _arg_to_str(self.__stderr_target.path)
 
         return command
 

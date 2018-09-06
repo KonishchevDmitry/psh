@@ -3,7 +3,7 @@
 PYTHON   ?= python
 NAME     := psh
 RPM_NAME := python-$(NAME)
-VERSION  := 0.2.5
+VERSION   = $(shell rpm -q --qf "%{version}\n" --specfile $(RPM_NAME).spec | head -1)
 
 TEST_ENV_PATH         := test-env
 CHECK_PYTHON_VERSIONS := 2 3

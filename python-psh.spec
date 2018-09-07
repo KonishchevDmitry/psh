@@ -24,7 +24,7 @@
 %bcond_without check
 
 Name:    python-psh
-Version: 0.2.5
+Version: 0.2.8
 Release: 1%{?dist}
 Summary: Process management library
 
@@ -155,6 +155,9 @@ make PYTHON=%{__python3} INSTALL_FLAGS="-O1 --root '%buildroot'" install
 
 
 %changelog
+* Fri Sep 07 2018 Dmitry Konishchev <konishchev@gmail.com> - 0.2.8-1
+- New version.
+
 * Thu Sep 24 2015 Dmitry Konishchev <konishchev@gmail.com> - 0.2.5-1
 - New version.
 

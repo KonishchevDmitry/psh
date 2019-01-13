@@ -3,7 +3,7 @@
 PYTHON   ?= python
 NAME     := psh
 RPM_NAME := python-$(NAME)
-VERSION  := 0.2.8
+VERSION  := $(shell $(PYTHON) setup.py --version)
 
 TEST_ENV_PATH         := test-env
 CHECK_PYTHON_VERSIONS := 2 3

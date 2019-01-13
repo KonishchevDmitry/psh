@@ -1,16 +1,21 @@
-%if 0%{?fedora} > 12 || 0%{?rhel} > 7
+%if 0%{?fedora} > 12 || 0%{?epel} >= 6
 %bcond_without python3
 %else
 %bcond_with python3
 %endif
 
-%if 0%{?rhel} && 0%{?rhel} <= 6
+%if 0%{?epel} >= 7
+%bcond_without python3_other
+%endif
+
+%if 0%{?rhel} <= 6
 %{!?__python2: %global __python2 /usr/bin/python2}
 %{!?python2_sitelib: %global python2_sitelib %(%{__python2} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %endif
-%if %{with python3}
+%if 0%{with python3}
 %{!?__python3: %global __python3 /usr/bin/python3}
 %{!?python3_sitelib: %global python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%{!?python3_pkgversion: %global python3_pkgversion 3}
 %endif  # with python3
 
 # Enable building of doc package
@@ -20,32 +25,38 @@
 %bcond_without docs
 %endif
 
-# Run tests
 %bcond_without check
 
-Name:    python-psh
+%global project_name psh
+%global project_description %{expand:
+psh allows you to spawn processes in Unix shell-style way.
+
+Unix shell is very convenient for spawning processes, connecting them into
+pipes, etc., but it has a very limited language which is often not suitable
+for writing complex programs. Python is a very flexible and reach language
+which is used in a wide variety of application domains, but its standard
+subprocess module is very limited. psh combines the power of Python language
+and an elegant shell-style way to execute processes.}
+
+Name:    python-%project_name
 Version: 0.2.8
 Release: 1%{?dist}
 Summary: Process management library
 
 Group:   Development/Languages
 License: GPLv3
-URL:     http://konishchevdmitry.github.com/psh/
-Source:  http://pypi.python.org/packages/source/p/psh/psh-%version.tar.gz
+URL:     http://konishchevdmitry.github.com/%project_name/
+Source:  http://pypi.python.org/packages/source/p/%project_name/%project_name-%version.tar.gz
 
 BuildArch:     noarch
 BuildRequires: make
 BuildRequires: python2-devel python-setuptools
-%if 0%{with python3}
-BuildRequires: python3-devel python3-setuptools
-%endif  # with python3
 
 %if 0%{with check}
 BuildRequires: procps
-BuildRequires: python-pcore, python-psys >= 0.3, pytest >= 2.2.4
-%if 0%{with python3}
-BuildRequires: python3-pcore, python3-psys >= 0.3, python3-pytest >= 2.2.4
-%endif  # with python3
+BuildRequires: python-pcore
+BuildRequires: python-psys >= 0.3
+BuildRequires: pytest >= 2.2.4
 %endif  # with check
 
 %if 0%{with docs}
@@ -54,33 +65,41 @@ BuildRequires: python-pcore, python-psys >= 0.3, python-sphinx
 
 Requires: python-pcore, python-psys >= 0.3
 
-%description
-psh allows you to spawn processes in Unix shell-style way.
-
-Unix shell is very convenient for spawning processes, connecting them into
-pipes, etc., but it has a very limited language which is often not suitable
-for writing complex programs. Python is a very flexible and reach language
-which is used in a wide variety of application domains, but its standard
-subprocess module is very limited. psh combines the power of Python language
-and an elegant shell-style way to execute processes.
+%description %{project_description}
 
 
 %if 0%{with python3}
-%package -n python3-psh
-Summary: Process management library
+%package -n python%{python3_pkgversion}-%project_name
+Summary: %{summary}
+Requires: python%{python3_pkgversion}-pcore
+Requires: python%{python3_pkgversion}-psys >= 0.3
+BuildRequires: python%{python3_pkgversion}-devel
+BuildRequires: python%{python3_pkgversion}-setuptools
+%if 0%{with check}
+BuildRequires: python%{python3_pkgversion}-pcore
+BuildRequires: python%{python3_pkgversion}-psys >= 0.3
+BuildRequires: python%{python3_pkgversion}-pytest >= 2.2.4
+%endif
 
-Requires: python3-pcore, python3-psys >= 0.3
-
-%description -n python3-psh
-psh allows you to spawn processes in Unix shell-style way.
-
-Unix shell is very convenient for spawning processes, connecting them into
-pipes, etc., but it has a very limited language which is often not suitable
-for writing complex programs. Python is a very flexible and reach language
-which is used in a wide variety of application domains, but its standard
-subprocess module is very limited. psh combines the power of Python language
-and an elegant shell-style way to execute processes.
+%description -n python%{python3_pkgversion}-%project_name %{project_description}
 %endif  # with python3
+
+
+%if 0%{with python3_other}
+%package -n python%{python3_other_pkgversion}-%project_name
+Summary: %{summary}
+Requires: python%{python3_other_pkgversion}-pcore
+Requires: python%{python3_other_pkgversion}-psys >= 0.3
+BuildRequires: python%{python3_other_pkgversion}-devel
+BuildRequires: python%{python3_other_pkgversion}-setuptools
+%if 0%{with check}
+BuildRequires: python%{python3_other_pkgversion}-pcore
+BuildRequires: python%{python3_other_pkgversion}-psys >= 0.3
+BuildRequires: python%{python3_other_pkgversion}-pytest >= 2.2.4
+%endif
+
+%description -n python%{python3_other_pkgversion}-%project_name %{project_description}
+%endif  # with python3_other
 
 
 %if 0%{with docs}
@@ -95,7 +114,7 @@ Documentation for psh
 
 
 %prep
-%setup -n psh-%version -q
+%setup -n %project_name-%version -q
 
 
 %build
@@ -103,6 +122,9 @@ make PYTHON=%{__python2}
 %if %{with python3}
 make PYTHON=%{__python3}
 %endif  # with python3
+%if 0%{with python3_other}
+make PYTHON=%{__python3_other}
+%endif  # with python3_other
 
 
 %if 0%{with docs}
@@ -117,6 +139,9 @@ rm doc/_build/html/.buildinfo
 %if 0%{with python3}
 %{__python3} setup.py test
 %endif  # with python3
+%if 0%{with python3_other}
+%{__python3_other} setup.py test
+%endif  # with python3_other
 %endif  # with check
 
 
@@ -127,6 +152,9 @@ make PYTHON=%{__python2} INSTALL_FLAGS="-O1 --root '%buildroot'" install
 %if %{with python3}
 make PYTHON=%{__python3} INSTALL_FLAGS="-O1 --root '%buildroot'" install
 %endif  # with python3
+%if 0%{with python3_other}
+make PYTHON=%{__python3_other} INSTALL_FLAGS="-O1 --root '%buildroot'" install
+%endif  # with python3_other
 
 
 %files
@@ -136,12 +164,20 @@ make PYTHON=%{__python3} INSTALL_FLAGS="-O1 --root '%buildroot'" install
 %doc ChangeLog INSTALL README.rst
 
 %if 0%{with python3}
-%files -n python3-psh
+%files -n python%{python3_pkgversion}-%project_name
 %defattr(-,root,root,-)
 %{python3_sitelib}/psh
 %{python3_sitelib}/psh-*.egg-info
 %doc ChangeLog INSTALL README.rst
 %endif  # with python3
+
+%if 0%{with python3_other}
+%files -n python%{python3_other_pkgversion}-%project_name
+%defattr(-,root,root,-)
+%{python3_other_sitelib}/psh
+%{python3_other_sitelib}/psh-*.egg-info
+%doc ChangeLog INSTALL README.rst
+%endif  # with python3_other
 
 %if 0%{with docs}
 %files doc

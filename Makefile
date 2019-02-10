@@ -27,7 +27,7 @@ install:
 	$(PYTHON) setup.py install --skip-build $(INSTALL_FLAGS)
 
 doc:
-	$(MAKE) -C doc html
+	$(MAKE) -C doc html SPHINXOPTS="-D version=$(VERSION)"
 
 dist: clean
 	$(PYTHON) setup.py sdist

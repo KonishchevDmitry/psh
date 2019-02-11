@@ -3,7 +3,7 @@
 PYTHON   ?= python
 NAME     := psh
 RPM_NAME := python-$(NAME)
-VERSION  := 0.2.8
+VERSION  := $(shell $(PYTHON) setup.py --version)
 
 TEST_ENV_PATH         := test-env
 CHECK_PYTHON_VERSIONS := 2 3
@@ -27,7 +27,7 @@ install:
 	$(PYTHON) setup.py install --skip-build $(INSTALL_FLAGS)
 
 doc:
-	$(MAKE) -C doc html
+	$(MAKE) -C doc html SPHINXOPTS="-D version=$(VERSION)"
 
 dist: clean
 	$(PYTHON) setup.py sdist

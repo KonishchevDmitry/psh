@@ -1,3 +1,8 @@
+Version 0.2.8
+-------------
+ * Fix io redirection to file with appending in shell mode
+ * Fix command string when redirect to file with append
+
 Version 0.2.7
 -------------
  * Fix a typo in error message

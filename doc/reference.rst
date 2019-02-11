@@ -27,7 +27,7 @@ Module objects
 --------------
 
 .. automodule:: psh
-    :members: Sh, Program, sh, Process, STDIN, STDOUT, STDERR, PIPE, File, DEVNULL
+    :members: Sh, Program, Process, STDIN, STDOUT, STDERR, PIPE, File, DEVNULL
     :special-members:
     :exclude-members: __weakref__
 

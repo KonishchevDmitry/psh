@@ -44,7 +44,7 @@ Release: 2%{?dist}
 Summary: Process management library
 
 Group:   Development/Languages
-License: GPLv3
+License: MIT
 URL:     http://konishchevdmitry.github.com/%project_name/
 Source:  http://pypi.python.org/packages/source/p/%project_name/%project_name-%version.tar.gz
 

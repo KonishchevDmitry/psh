@@ -39,12 +39,12 @@ subprocess module is very limited. psh combines the power of Python language
 and an elegant shell-style way to execute processes.}
 
 Name:    python-%project_name
-Version: 0.2.8
-Release: 2%{?dist}
+Version: 0.2.9
+Release: 1%{?dist}
 Summary: Process management library
 
 Group:   Development/Languages
-License: GPLv3
+License: MIT
 URL:     http://konishchevdmitry.github.com/%project_name/
 Source:  http://pypi.python.org/packages/source/p/%project_name/%project_name-%version.tar.gz
 

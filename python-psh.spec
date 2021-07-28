@@ -39,13 +39,13 @@ subprocess module is very limited. psh combines the power of Python language
 and an elegant shell-style way to execute processes.}
 
 Name:    python-%project_name
-Version: 0.2.8
-Release: 2%{?dist}
+Version: 0.2.10
+Release: 1%{?dist}
 Summary: Process management library
 
 Group:   Development/Languages
 License: MIT
-URL:     http://konishchevdmitry.github.com/%project_name/
+URL:     https://konishchevdmitry.github.io/%project_name/
 Source:  http://pypi.python.org/packages/source/p/%project_name/%project_name-%version.tar.gz
 
 BuildArch:     noarch
@@ -191,6 +191,9 @@ make PYTHON=%{__python3_other} INSTALL_FLAGS="-O1 --root '%buildroot'" install
 
 
 %changelog
+* Wed Jul 28 2021 Dmitry Konishchev <konishchev@gmail.com> - 0.2.10-1
+- Change documentation URL
+
 * Sun Feb 10 2019 Mikhail Ushanov <gm.mephisto@gmail.com> - 0.2.8-2
 - Add python3 package build for EPEL
 

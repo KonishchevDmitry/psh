@@ -27,17 +27,17 @@ which is used in a wide variety of application domains, but its standard
 subprocess module is very limited. psh combines the power of Python language
 and an elegant shell-style way to execute processes.
 
-Complete documentation is available at http://konishchevdmitry.github.com/psh/\
+Complete documentation is available at https://konishchevdmitry.github.io/psh/\
 """
 
 if __name__ == "__main__":
     setup(
         name="psh",
-        version="0.2.8",
+        version="0.2.10",
 
         description="Process management library",
         long_description=description,
-        url="http://konishchevdmitry.github.com/psh/",
+        url="https://konishchevdmitry.github.io/psh/",
 
         license="MIT",
         author="Dmitry Konishchev",

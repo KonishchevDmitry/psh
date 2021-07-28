@@ -50,4 +50,4 @@ Output::
 Documentation
 -------------
 
-Complete documentation is available at http://konishchevdmitry.github.com/psh/
+Complete documentation is available at https://konishchevdmitry.github.io/psh/

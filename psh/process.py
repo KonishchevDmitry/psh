@@ -656,7 +656,7 @@ class Process:
                     try:
                         if write:
                             file_fd = eintr_retry(os.open)(
-                                path, os.O_WRONLY | os.O_CREAT | (os.O_APPEND if append else 0), 0o666)
+                                path, os.O_WRONLY | os.O_CREAT | (os.O_APPEND if append else os.O_TRUNC), 0o666)
                         else:
                             file_fd = eintr_retry(os.open)(path, os.O_RDONLY)
 

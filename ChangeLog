@@ -1,3 +1,7 @@
+Version 0.2.11
+--------------
+ * Add missing O_TRUNC to file creation mode
+
 Version 0.2.10
 --------------
  * Change documentation URL

@@ -39,7 +39,7 @@ subprocess module is very limited. psh combines the power of Python language
 and an elegant shell-style way to execute processes.}
 
 Name:    python-%project_name
-Version: 0.2.10
+Version: 0.2.11
 Release: 1%{?dist}
 Summary: Process management library
 
@@ -191,6 +191,9 @@ make PYTHON=%{__python3_other} INSTALL_FLAGS="-O1 --root '%buildroot'" install
 
 
 %changelog
+* Fri Apr 15 2022 Dmitry Konishchev <konishchev@gmail.com> - 0.2.11-1
+- Add missing O_TRUNC to file creation mode
+
 * Wed Jul 28 2021 Dmitry Konishchev <konishchev@gmail.com> - 0.2.10-1
 - Change documentation URL
 

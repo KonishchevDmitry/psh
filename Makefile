@@ -1,6 +1,6 @@
 .PHONY: build check install doc dist sources srpm rpm pypi clean
 
-PYTHON   ?= python
+PYTHON   ?= python3
 NAME     := psh
 RPM_NAME := python-$(NAME)
 VERSION  := $(shell $(PYTHON) setup.py --version)
@@ -43,10 +43,10 @@ srpm: dist
 rpm: dist
 	rpmbuild -ba --define "_sourcedir $(CURDIR)" $(RPM_NAME).spec
 
-pypi: clean
-	$(PYTHON) setup.py sdist upload
+pypi: dist
+	$(PYTHON) -m twine upload dist/*
 
 clean:
 	@$(MAKE) -C doc clean
-	find . -type d -name __pycache__ -d -exec rm -rf {} \;
+	find . -depth -type d -name __pycache__ -exec rm -rf {} \;
 	rm -rf build dist $(NAME)-*.tar.gz $(NAME).egg-info *.egg $(TEST_ENV_PATH)

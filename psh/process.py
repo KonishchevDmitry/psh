@@ -4,7 +4,7 @@ from __future__ import print_function, unicode_literals
 
 from pcore import PY3
 
-import collections
+import collections.abc
 import errno
 import fcntl
 import logging
@@ -139,7 +139,7 @@ class Process:
 
     :keyword _on_execute: if is not :py:const:`None`, the object is called
         before the process execution (default is :py:const:`None`)
-    :type _on_execute: :py:class:`collections.Callable`
+    :type _on_execute: :py:class:`collections.abc.Callable`
 
 
     :keyword _shell: if True, accept :py:class:`Process` objects as command
@@ -151,8 +151,8 @@ class Process:
     :keyword _stdin: specifies stdin redirection (see :ref:`io-redirection`)
         (default is :py:data:`DEVNULL`)
     :type _stdin: :py:class:`str`, :py:class:`unicode`, :py:const:`STDIN`,
-        :py:class:`File`, :py:class:`collections.Iterator`,
-        :py:class:`collections.Iterable`
+        :py:class:`File`, :py:class:`collections.abc.Iterator`,
+        :py:class:`collections.abc.Iterable`
 
 
     :keyword _stdout: specifies stdout redirection (see :ref:`io-redirection`)
@@ -568,7 +568,7 @@ class Process:
                 pass
             elif (
                 type(stdin_source) in (bytes, str) or
-                isinstance(stdin_source, (collections.Iterator, collections.Iterable))
+                isinstance(stdin_source, (collections.abc.Iterator, collections.abc.Iterable))
             ):
                 raise InvalidOperation(
                     "String and iterator input is not supported for serialization to a shell script")
@@ -921,9 +921,9 @@ class Process:
         else:
             if type(self.__stdin_source) in (bytes, str):
                 self.__stdin_generator = iter([self.__stdin_source])
-            elif isinstance(self.__stdin_source, collections.Iterator):
+            elif isinstance(self.__stdin_source, collections.abc.Iterator):
                 self.__stdin_generator = self.__stdin_source
-            elif isinstance(self.__stdin_source, collections.Iterable):
+            elif isinstance(self.__stdin_source, collections.abc.Iterable):
                 self.__stdin_generator = iter(self.__stdin_source)
             else:
                 raise LogicalError()
@@ -1069,7 +1069,7 @@ class Process:
                 self.__ok_statuses = [
                     check_arg(option, status, types=(int,)) for status in value]
             elif option == "_on_execute":
-                self.__on_execute = check_arg(option, value, instance_of=collections.Callable)
+                self.__on_execute = check_arg(option, value, instance_of=collections.abc.Callable)
             elif option == "_shell":
                 self.__shell = check_arg(option, value, types=(bool,))
             elif option == "_stderr":
@@ -1077,7 +1077,7 @@ class Process:
                     option, value, instance_of=File, values=(STDOUT, STDERR, PIPE))
             elif option == "_stdin":
                 self.__stdin_source = check_arg(option, value, types=(bytes, str),
-                    instance_of=(File, collections.Iterator, collections.Iterable),
+                    instance_of=(File, collections.abc.Iterator, collections.abc.Iterable),
                     values=(STDIN,))
             elif option == "_stdout":
                 self.__stdout_target = check_arg(
